@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+coverage
+uploads
+database
+scripts/dump-core.sql
+package-lock.json

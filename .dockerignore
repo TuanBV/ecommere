@@ -1,0 +1,10 @@
+node_modules
+apps/api/dist
+apps/web/.next
+.next
+.git
+api.out.log
+api.err.log
+*.log
+.env.local
+uploads
