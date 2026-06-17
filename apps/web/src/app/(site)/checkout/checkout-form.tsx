@@ -349,8 +349,10 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="ml-1 text-sm font-semibold uppercase text-gray-600">{label}</label>
-      {children}
+      <label className="block">
+        <span className="ml-1 block text-sm font-semibold uppercase text-gray-600">{label}</span>
+        {children}
+      </label>
       {error ? <p className="ml-1 mt-1 text-sm text-red-500">{error}</p> : null}
     </div>
   );

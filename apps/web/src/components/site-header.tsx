@@ -12,7 +12,7 @@ import {
   Newspaper,
   Phone
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { money } from '@/lib/api';
 import { useCart } from '@/store/cart';
 
@@ -31,6 +31,7 @@ type Category = {
 export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   const [open, setOpen] = useState(false);
   const [showTop, setShowTop] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const items = useCart((state) => state.items);
 
@@ -46,9 +47,27 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
 
+    if (open) {
+      closeButtonRef.current?.focus();
+    }
+
     return () => {
       document.body.style.overflow = '';
     };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
   useEffect(() => {
@@ -101,6 +120,9 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
         >
           <aside
             id="mobileSidebar"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu dieu huong"
             onClick={(event) => event.stopPropagation()}
             className="fixed left-0 top-0 z-[90] flex h-screen w-[310px] max-w-[86vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out"
           >
@@ -122,6 +144,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
               </Link>
 
               <button
+                ref={closeButtonRef}
                 type="button"
                 className="cursor-pointer p-2 text-gray-700"
                 onClick={() => setOpen(false)}
@@ -281,7 +304,10 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                 </span>
               </button>
 
-              <nav className="ml-4 flex h-full flex-1 items-center overflow-x-auto whitespace-nowrap text-[15px] font-medium">
+              <nav
+                aria-label="Danh muc san pham"
+                className="ml-4 flex h-full flex-1 items-center overflow-x-auto whitespace-nowrap text-[15px] font-medium"
+              >
                 {menuCategories.map((cat) => (
                   <Link
                     key={cat.id}

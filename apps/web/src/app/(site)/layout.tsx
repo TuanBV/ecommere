@@ -14,8 +14,13 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <>
+      <a href="#main-content" className="skip-link">
+        Bo qua menu den noi dung chinh
+      </a>
       <SiteHeader categories={categories} />
-      <div className="min-h-screen mt-2.5">{children}</div>
+      <div id="main-content" tabIndex={-1} className="mt-2.5 min-h-screen">
+        {children}
+      </div>
       <SiteFooter />
     </>
   );

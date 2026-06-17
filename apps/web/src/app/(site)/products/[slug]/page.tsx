@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ProductActions, ProductGallery } from './product-actions';
 import { ProductCard } from '@/components/product-card';
-import { Product, apiGet, money } from '@/lib/api';
+import { Product, apiGet, mediaUrl, money } from '@/lib/api';
 
 type ProductDetail = Product & {
   content?: string | null;
@@ -66,9 +66,38 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const policies = asStringList(product.policy?.policies);
   const afterSales = asStringList(product.policy?.afterSales);
   const gifts = asStringList(product.policy?.gifts);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  const productUrl = `${siteUrl}/products/${product.slug ?? product.id}`;
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    image: images.map((image) => mediaUrl(image.imageUrl)),
+    description: product.description ?? product.title,
+    sku: product.sku,
+    brand: product.brand?.title
+      ? {
+          '@type': 'Brand',
+          name: product.brand.title
+        }
+      : undefined,
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'VND',
+      price,
+      availability:
+        product.stockQty > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    }
+  };
 
   return (
     <main className="bg-[#f1f5f9] py-8 text-gray-800">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <div className="container">
         <nav className="overflow-x-auto whitespace-nowrap pb-2">
           <ol className="inline-flex items-center gap-2 text-base text-gray-900">
