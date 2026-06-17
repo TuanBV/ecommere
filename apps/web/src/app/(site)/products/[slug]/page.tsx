@@ -279,9 +279,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
 
           <aside className="lg:col-span-4">
-            <div className="sticky top-[132px] space-y-6 md:top-[176px] lg:top-[128px]">
-              <div className="overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm">
-                <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50 px-6 py-5">
+            <div className="space-y-6 lg:sticky lg:top-[128px]">
+              <div className="rounded-xl border border-gray-200/60 bg-white shadow-sm">
+                <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-6 py-5">
                   <List size={22} className="text-blue-600" />
                   <h2 className="text-base font-semibold text-gray-900 md:text-xl">
                     Thông số kỹ thuật
@@ -290,7 +290,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                 {product.specification ? (
                   <div
-                    className="spec-table p-2 text-base [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td:first-child:not(:last-child)]:w-[40%] [&_td:first-child:not(:last-child)]:bg-slate-50 [&_td:first-child:not(:last-child)]:font-semibold [&_td]:break-words [&_td]:border [&_td]:border-slate-100 [&_td]:bg-white [&_td]:p-3 [&_td]:text-base [&_td]:leading-5 [&_td]:text-slate-700"
+                    className="spec-table max-w-full p-2 text-base [overflow-wrap:anywhere] [word-break:break-word] [&_*]:max-w-full [&_img]:h-auto [&_img]:max-w-full [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td:first-child:not(:last-child)]:w-[40%] [&_td:first-child:not(:last-child)]:bg-slate-50 [&_td:first-child:not(:last-child)]:font-semibold [&_td]:whitespace-normal [&_td]:break-words [&_td]:border [&_td]:border-slate-100 [&_td]:bg-white [&_td]:p-3 [&_td]:text-base [&_td]:leading-5 [&_td]:text-slate-700 [&_th]:whitespace-normal [&_th]:break-words [&_th]:border [&_th]:border-slate-100 [&_th]:bg-slate-50 [&_th]:p-3"
                     dangerouslySetInnerHTML={{ __html: product.specification }}
                   />
                 ) : (

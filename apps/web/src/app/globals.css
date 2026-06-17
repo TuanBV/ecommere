@@ -123,3 +123,98 @@ textarea,
 .animate-infinite-scroll {
   animation: infinite-scroll 36s linear infinite;
 }
+
+.product-content,
+.spec-table {
+  max-width: 100%;
+  padding: 8px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  background: #fff;
+}
+
+.product-content *,
+.spec-table * {
+  max-width: 100% !important;
+}
+
+.product-content img,
+.spec-table img {
+  height: auto !important;
+  max-width: 100% !important;
+}
+
+.product-content table,
+.spec-table table {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  border: 1px solid #e5e7eb !important;
+  background: #fff;
+}
+
+.product-content col,
+.product-content colgroup,
+.spec-table col,
+.spec-table colgroup {
+  width: auto !important;
+}
+
+.product-content th,
+.product-content td,
+.spec-table th,
+.spec-table td {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  vertical-align: top;
+}
+
+.product-content th *,
+.product-content td *,
+.spec-table th *,
+.spec-table td * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.spec-table p,
+.spec-table div,
+.spec-table span,
+.spec-table strong,
+.spec-table b {
+  display: inline;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.spec-table th,
+.spec-table td {
+  padding: 12px 10px !important;
+  border: 1px solid #e5e7eb !important;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  background: #fff;
+}
+
+.spec-table th:first-child:not(:last-child),
+.spec-table td:first-child:not(:last-child) {
+  width: 40% !important;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+}

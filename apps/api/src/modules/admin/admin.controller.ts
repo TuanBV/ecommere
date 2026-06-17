@@ -71,14 +71,15 @@ export class AdminController {
     return ok(await this.admin.softDeleteProduct(id));
   }
 
-  @Post('uploads/product-image')
+  @Post('uploads/:type')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: (_req, _file, callback) => {
+        destination: (req, _file, callback) => {
+          const type = uploadType((req.params as { type?: string }).type);
           const uploadDir = process.env.UPLOAD_DIR ?? 'uploads';
           const root = isAbsolute(uploadDir) ? uploadDir : join(process.cwd(), uploadDir);
-          const destination = join(root, 'products');
+          const destination = join(root, type);
           mkdirSync(destination, { recursive: true });
           callback(null, destination);
         },
@@ -97,9 +98,9 @@ export class AdminController {
       limits: { fileSize: 5 * 1024 * 1024 }
     })
   )
-  async uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
+  async uploadImage(@Param('type') type: string, @UploadedFile() file?: Express.Multer.File) {
     if (!file) throw new BadRequestException('Image file is required');
-    return ok({ url: `/uploads/products/${file.filename}` });
+    return ok({ url: `/uploads/${uploadType(type)}/${file.filename}` });
   }
 
   @Get('orders')
@@ -246,4 +247,10 @@ export class AdminController {
   async deleteSetting(@Param('id') id: string) {
     return ok(await this.admin.softDeleteSetting(id));
   }
+}
+
+function uploadType(value?: string) {
+  const allowed = new Set(['products', 'banners', 'sliders', 'news']);
+  if (!value || !allowed.has(value)) return 'products';
+  return value;
 }

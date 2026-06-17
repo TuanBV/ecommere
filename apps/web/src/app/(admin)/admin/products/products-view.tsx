@@ -6,6 +6,7 @@ import {
   Download,
   Eye,
   ImagePlus,
+  List,
   Pencil,
   Plus,
   RefreshCw,
@@ -35,6 +36,8 @@ type ProductForm = {
   slug: string;
   categoryId: string;
   brandId: string;
+  groupId: string;
+  relatedProductIds: string[];
   price: string;
   salePrice: string;
   stockQty: string;
@@ -64,6 +67,8 @@ const emptyProduct: ProductForm = {
   slug: '',
   categoryId: '',
   brandId: '',
+  groupId: '',
+  relatedProductIds: [],
   price: '',
   salePrice: '',
   stockQty: '0',
@@ -162,15 +167,24 @@ export function ProductsView({
     setScreen('form');
   }
 
+  function relatedIdsFor(item: ProductRow) {
+    if (!item.groupId) return [];
+    return items
+      .filter((product) => product.id !== item.id && product.groupId === item.groupId)
+      .map((product) => product.id);
+  }
+
   function openEdit(item: ProductRow) {
     setForm({
       id: item.id,
       title: item.title,
-      variantName: '',
+      variantName: item.variantName ?? '',
       sku: item.sku,
       slug: item.slug ?? '',
       categoryId: item.categoryId,
       brandId: item.brandId,
+      groupId: item.groupId ?? '',
+      relatedProductIds: relatedIdsFor(item),
       price: String(item.price ?? ''),
       salePrice: String(item.salePrice ?? ''),
       stockQty: String(item.stockQty ?? 0),
@@ -191,11 +205,17 @@ export function ProductsView({
     setForm({
       id: '',
       title: `${item.title} copy`,
-      variantName: '',
+      variantName: item.variantName ?? '',
       sku: '',
       slug: item.slug ? `${item.slug}-copy` : '',
       categoryId: item.categoryId,
       brandId: item.brandId,
+      groupId: item.groupId ?? '',
+      relatedProductIds: item.groupId
+        ? items
+            .filter((product) => product.id !== item.id && product.groupId === item.groupId)
+            .map((product) => product.id)
+        : [item.id],
       price: String(item.price ?? ''),
       salePrice: String(item.salePrice ?? ''),
       stockQty: String(item.stockQty ?? 0),
@@ -260,7 +280,9 @@ export function ProductsView({
       specification: form.specification,
       variantName: form.variantName.trim(),
       color: form.color.trim(),
-      size: form.size.trim()
+      size: form.size.trim(),
+      groupId: form.groupId,
+      relatedProductIds: form.relatedProductIds
     };
 
     setSaving(true);
@@ -306,11 +328,7 @@ export function ProductsView({
     formData.append('file', file);
     setUploading(true);
     try {
-      const result = await authUpload<{ url: string }>(
-        '/admin/uploads/product-image',
-        token,
-        formData
-      );
+      const result = await authUpload<{ url: string }>('/admin/uploads/products', token, formData);
       if (target === 'avatar') {
         updateField('image', result.url);
         setForm((current) => ({
@@ -390,6 +408,7 @@ export function ProductsView({
           categories={categories}
           errors={errors}
           form={form}
+          products={items}
           saving={saving}
           uploading={uploading}
           onCancel={() => {
@@ -603,6 +622,7 @@ function ProductList({
 
 function ProductFormScreen({
   form,
+  products,
   categories,
   brands,
   errors,
@@ -614,6 +634,7 @@ function ProductFormScreen({
   onCancel
 }: {
   form: ProductForm;
+  products: ProductRow[];
   categories: OptionItem[];
   brands: OptionItem[];
   errors: FormErrors;
@@ -624,6 +645,9 @@ function ProductFormScreen({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCancel: () => void;
 }) {
+  const [draggedImage, setDraggedImage] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   function addImageUrl(value: string) {
     const imageUrl = value.trim();
     if (!imageUrl) return;
@@ -636,6 +660,19 @@ function ProductFormScreen({
       form.images.filter((item) => item !== imageUrl)
     );
     if (form.image === imageUrl) onUpdate('image', '');
+  }
+
+  function moveImage(sourceUrl: string, targetUrl: string) {
+    if (sourceUrl === targetUrl) return;
+
+    const sourceIndex = form.images.indexOf(sourceUrl);
+    const targetIndex = form.images.indexOf(targetUrl);
+    if (sourceIndex < 0 || targetIndex < 0) return;
+
+    const nextImages = [...form.images];
+    const [movedImage] = nextImages.splice(sourceIndex, 1);
+    nextImages.splice(targetIndex, 0, movedImage);
+    onUpdate('images', nextImages);
   }
 
   return (
@@ -653,9 +690,7 @@ function ProductFormScreen({
             </button>
             <button
               type="button"
-              onClick={() =>
-                form.slug && window.open(`/products/${form.slug}`, '_blank', 'noopener')
-              }
+              onClick={() => setPreviewOpen(true)}
               className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-xs font-black uppercase text-blue-700 transition hover:bg-blue-100"
             >
               <Eye size={16} />
@@ -807,17 +842,13 @@ function ProductFormScreen({
                 onChange={(value) => onUpdate('size', value)}
               />
             </div>
-            <Input
-              label="Đường dẫn ảnh"
-              value={form.image}
-              placeholder="/uploads/products/example"
-              onChange={(value) => onUpdate('image', value)}
-            />
-            <Input
-              label="Sản phẩm cùng loại"
-              value=""
-              placeholder="Tìm kiếm sản phẩm theo tên..."
-              onChange={() => undefined}
+            <RelatedProductsField
+              currentProductId={form.id}
+              groupId={form.groupId}
+              products={products}
+              selectedIds={form.relatedProductIds}
+              onGroupChange={(value) => onUpdate('groupId', value)}
+              onSelectedChange={(value) => onUpdate('relatedProductIds', value)}
             />
           </div>
         </div>
@@ -839,11 +870,28 @@ function ProductFormScreen({
               }}
             />
           </label>
-          {form.images.map((imageUrl) => (
+          {form.images.map((imageUrl, index) => (
             <div
               key={imageUrl}
-              className="relative h-20 w-20 overflow-hidden rounded-xl border border-slate-200 bg-white"
+              draggable
+              onDragStart={() => setDraggedImage(imageUrl)}
+              onDragEnd={() => setDraggedImage(null)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (draggedImage) moveImage(draggedImage, imageUrl);
+                setDraggedImage(null);
+              }}
+              className={`relative h-20 w-20 cursor-grab overflow-hidden rounded-xl border bg-white active:cursor-grabbing ${
+                draggedImage === imageUrl
+                  ? 'border-blue-500 opacity-60 ring-4 ring-blue-100'
+                  : 'border-slate-200'
+              }`}
+              title="Kéo thả để đổi vị trí"
             >
+              <span className="absolute bottom-1 left-1 z-10 rounded bg-slate-900/80 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                {index + 1}
+              </span>
               <button
                 type="button"
                 aria-label="Xóa ảnh album"
@@ -899,7 +947,160 @@ function ProductFormScreen({
           <option value="0">Tạm ẩn</option>
         </Select>
       </Section>
+
+      {previewOpen ? (
+        <ProductPreviewModal
+          brands={brands}
+          categories={categories}
+          form={form}
+          onClose={() => setPreviewOpen(false)}
+        />
+      ) : null}
     </form>
+  );
+}
+
+function ProductPreviewModal({
+  form,
+  categories,
+  brands,
+  onClose
+}: {
+  form: ProductForm;
+  categories: OptionItem[];
+  brands: OptionItem[];
+  onClose: () => void;
+}) {
+  const category = categories.find((item) => item.id === form.categoryId)?.title ?? 'Chưa chọn';
+  const brand = brands.find((item) => item.id === form.brandId)?.title ?? 'Chưa chọn';
+  const image = form.image || form.images[0] || '';
+  const price = Number(form.price || 0);
+  const salePrice = Number(form.salePrice || 0);
+  const displayPrice = salePrice > 0 ? salePrice : price;
+  const galleryImages = form.images.length ? form.images : image ? [image] : [];
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-slate-900/60 p-4 backdrop-blur-sm">
+      <div className="mx-auto flex max-h-[92vh] max-w-[1280px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <div>
+            <div className="text-xs font-black uppercase text-blue-600">Preview sản phẩm</div>
+            <h3 className="mt-1 line-clamp-1 text-lg font-bold text-slate-800">
+              {form.title || 'Sản phẩm chưa có tên'}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200"
+            aria-label="Đóng preview"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto bg-[#f1f5f9] p-5">
+          <div className="grid overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm lg:grid-cols-2">
+            <div className="border-gray-50 p-5 lg:border-r">
+              <div className="grid aspect-square place-items-center rounded-xl bg-slate-50">
+                {image ? (
+                  <img
+                    src={mediaUrl(image)}
+                    alt={form.title || 'Ảnh sản phẩm'}
+                    className="h-full w-full object-contain p-4"
+                  />
+                ) : (
+                  <ImagePlus className="text-slate-300" size={52} />
+                )}
+              </div>
+              {galleryImages.length ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {galleryImages.map((item) => (
+                    <div
+                      key={item}
+                      className="grid h-16 w-16 place-items-center rounded-lg border border-slate-200 bg-white"
+                    >
+                      <img
+                        src={mediaUrl(item)}
+                        alt="Ảnh album"
+                        className="h-full w-full object-contain p-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="bg-gray-50/30 p-5">
+              <div className="mb-3 text-sm font-bold uppercase text-blue-600">{brand}</div>
+              <h1 className="text-2xl font-bold leading-tight text-slate-900">
+                {form.title || 'Sản phẩm chưa có tên'}
+              </h1>
+              {form.variantName ? (
+                <div className="mt-2 text-sm font-semibold text-slate-500">
+                  Phiên bản: {form.variantName}
+                </div>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap items-end gap-3">
+                <div className="text-3xl font-bold text-rose-600">{money(displayPrice)}</div>
+                {salePrice > 0 && price > salePrice ? (
+                  <div className="text-lg font-semibold text-slate-400 line-through">
+                    {money(price)}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-5 grid gap-3 text-sm font-semibold text-slate-600 md:grid-cols-2">
+                <div className="rounded-xl bg-slate-50 p-3">Danh mục: {category}</div>
+                <div className="rounded-xl bg-slate-50 p-3">SKU: {form.sku || 'Chưa nhập'}</div>
+                <div className="rounded-xl bg-slate-50 p-3">Tồn kho: {form.stockQty || '0'}</div>
+                <div className="rounded-xl bg-slate-50 p-3">
+                  Trạng thái: {form.status === '0' ? 'Tạm ẩn' : 'Đang kinh doanh'}
+                </div>
+                {form.color ? (
+                  <div className="rounded-xl bg-slate-50 p-3">Màu: {form.color}</div>
+                ) : null}
+                {form.size ? (
+                  <div className="rounded-xl bg-slate-50 p-3">Kích thước: {form.size}</div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-12">
+            <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200/60 bg-white p-5 shadow-sm lg:col-span-8">
+              <h2 className="mb-4 text-lg font-bold text-slate-900">Mô tả chi tiết</h2>
+              {form.content ? (
+                <div
+                  className="product-content sun-editor-editable max-w-full text-base leading-8 text-slate-700 [overflow-wrap:anywhere] [word-break:break-word] [&_*]:max-w-full [&_img]:h-auto [&_img]:max-w-full [&_table]:my-6 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td]:whitespace-normal [&_td]:break-words [&_td]:border [&_td]:border-slate-200 [&_td]:p-3 [&_th]:whitespace-normal [&_th]:break-words [&_th]:border [&_th]:border-slate-200 [&_th]:p-3"
+                  dangerouslySetInnerHTML={{ __html: form.content }}
+                />
+              ) : (
+                <div className="text-sm font-medium text-slate-500">Chưa có nội dung chi tiết.</div>
+              )}
+            </section>
+
+            <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200/60 bg-white shadow-sm lg:col-span-4">
+              <div className="flex items-center gap-3 border-b border-gray-100 bg-white px-6 py-5">
+                <List size={20} className="text-blue-600" />
+                <h2 className="text-base font-semibold text-gray-900 md:text-xl">
+                  Thông số kỹ thuật
+                </h2>
+              </div>
+              {form.specification ? (
+                <div
+                  className="spec-table sun-editor-editable max-w-full text-base leading-7 text-slate-700"
+                  dangerouslySetInnerHTML={{ __html: form.specification }}
+                />
+              ) : (
+                <div className="text-sm font-medium text-slate-500">Chưa có thông số kỹ thuật.</div>
+              )}
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1049,6 +1250,116 @@ function IconButton({
     >
       {children}
     </button>
+  );
+}
+
+function RelatedProductsField({
+  currentProductId,
+  groupId,
+  products,
+  selectedIds,
+  onGroupChange,
+  onSelectedChange
+}: {
+  currentProductId: string;
+  groupId: string;
+  products: ProductRow[];
+  selectedIds: string[];
+  onGroupChange: (value: string) => void;
+  onSelectedChange: (value: string[]) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const selectedProducts = selectedIds
+    .map((id) => products.find((product) => product.id === id))
+    .filter((product): product is ProductRow => Boolean(product));
+  const keyword = query.trim().toLowerCase();
+  const suggestions = products
+    .filter((product) => product.id !== currentProductId)
+    .filter((product) => !selectedIds.includes(product.id))
+    .filter((product) => {
+      if (!keyword) return false;
+      return (
+        product.title.toLowerCase().includes(keyword) ||
+        product.sku.toLowerCase().includes(keyword) ||
+        (product.slug ?? '').toLowerCase().includes(keyword)
+      );
+    })
+    .slice(0, 6);
+
+  function add(product: ProductRow) {
+    const nextGroupId = groupId || product.groupId || crypto.randomUUID();
+    onGroupChange(nextGroupId);
+    onSelectedChange([...selectedIds, product.id]);
+    setQuery('');
+  }
+
+  function remove(productId: string) {
+    const nextSelectedIds = selectedIds.filter((id) => id !== productId);
+    onSelectedChange(nextSelectedIds);
+    if (!nextSelectedIds.length) onGroupChange('');
+  }
+
+  return (
+    <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <div className="text-[11px] font-black uppercase text-slate-500">Chọn sản phẩm cùng loại</div>
+      <input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Tìm theo tên, SKU hoặc slug..."
+        className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+      />
+
+      {selectedProducts.length ? (
+        <div className="flex flex-wrap gap-2">
+          {selectedProducts.map((product) => (
+            <span
+              key={product.id}
+              className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700"
+            >
+              {product.title}
+              <button
+                type="button"
+                onClick={() => remove(product.id)}
+                className="grid h-5 w-5 place-items-center rounded-full bg-blue-200 text-blue-800"
+                aria-label="Xóa sản phẩm cùng loại"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : (
+        <div className="text-xs font-medium text-slate-500">
+          Chưa chọn sản phẩm cùng loại. Khi chọn, hệ thống sẽ dùng chung nhóm để hiển thị phiên bản
+          trên trang chi tiết.
+        </div>
+      )}
+
+      {keyword && suggestions.length ? (
+        <div className="grid gap-1 rounded-xl bg-white p-2 ring-1 ring-slate-200">
+          {suggestions.map((product) => (
+            <button
+              key={product.id}
+              type="button"
+              onClick={() => add(product)}
+              className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm hover:bg-blue-50"
+            >
+              <span className="min-w-0">
+                <span className="block truncate font-bold text-slate-700">{product.title}</span>
+                <span className="block truncate text-xs font-medium text-slate-400">
+                  {product.sku} {product.groupId ? `- Nhóm ${product.groupId}` : ''}
+                </span>
+              </span>
+              <Plus size={16} className="shrink-0 text-blue-600" />
+            </button>
+          ))}
+        </div>
+      ) : keyword ? (
+        <div className="rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-500 ring-1 ring-slate-200">
+          Không tìm thấy sản phẩm phù hợp.
+        </div>
+      ) : null}
+    </div>
   );
 }
 

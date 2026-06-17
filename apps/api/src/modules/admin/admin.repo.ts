@@ -62,6 +62,12 @@ export class AdminRepository {
   async createProduct(body: AdminProductDto) {
     const id = randomUUID();
     const images = normalizeImages(body.images);
+    const relatedProductIds = normalizeIds(body.relatedProductIds).filter((item) => item !== id);
+    const groupId = body.groupId
+      ? String(body.groupId)
+      : relatedProductIds.length
+        ? randomUUID()
+        : null;
 
     return this.prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
@@ -84,11 +90,18 @@ export class AdminRepository {
         variantName: body.variantName ? String(body.variantName) : null,
         color: body.color ? String(body.color) : null,
         size: body.size ? String(body.size) : null,
-        groupId: body.groupId ? String(body.groupId) : null,
+        groupId,
         createdDate: new Date(),
         updatedDate: new Date()
       }
       });
+
+      if (groupId && relatedProductIds.length) {
+        await tx.product.updateMany({
+          where: { id: { in: relatedProductIds }, delFlag: 0 },
+          data: { groupId, updatedDate: new Date() }
+        });
+      }
 
       if (images.length) {
         await tx.productImage.createMany({
@@ -110,6 +123,25 @@ export class AdminRepository {
 
   async updateProduct(id: string, body: UpdateAdminProductDto) {
     return this.prisma.$transaction(async (tx) => {
+      const relatedProductIds =
+        body.relatedProductIds !== undefined
+          ? normalizeIds(body.relatedProductIds).filter((item) => item !== id)
+          : undefined;
+      const current =
+        relatedProductIds !== undefined
+          ? await tx.product.findUnique({ where: { id }, select: { groupId: true } })
+          : null;
+      const nextGroupId =
+        body.groupId !== undefined
+          ? body.groupId
+            ? String(body.groupId)
+            : null
+          : relatedProductIds !== undefined
+            ? relatedProductIds.length
+              ? (current?.groupId ?? randomUUID())
+              : null
+            : undefined;
+
       const product = await tx.product.update({
         where: { id },
         data: {
@@ -140,12 +172,28 @@ export class AdminRepository {
             : {}),
           ...(body.color !== undefined ? { color: body.color ? String(body.color) : null } : {}),
           ...(body.size !== undefined ? { size: body.size ? String(body.size) : null } : {}),
-          ...(body.groupId !== undefined
-            ? { groupId: body.groupId ? String(body.groupId) : null }
-            : {}),
+          ...(nextGroupId !== undefined ? { groupId: nextGroupId } : {}),
           updatedDate: new Date()
         }
       });
+
+      if (relatedProductIds !== undefined && nextGroupId) {
+        await tx.product.updateMany({
+          where: { id: { in: relatedProductIds }, delFlag: 0 },
+          data: { groupId: nextGroupId, updatedDate: new Date() }
+        });
+      }
+
+      if (relatedProductIds !== undefined && current?.groupId) {
+        await tx.product.updateMany({
+          where: {
+            groupId: current.groupId,
+            id: { notIn: [id, ...relatedProductIds] },
+            delFlag: 0
+          },
+          data: { groupId: null, updatedDate: new Date() }
+        });
+      }
 
       if (body.images !== undefined) {
         await tx.productImage.updateMany({
@@ -537,4 +585,8 @@ export class AdminRepository {
 
 function normalizeImages(images?: string[]) {
   return Array.from(new Set((images ?? []).map((item) => String(item).trim()).filter(Boolean)));
+}
+
+function normalizeIds(ids?: string[]) {
+  return Array.from(new Set((ids ?? []).map((item) => String(item).trim()).filter(Boolean)));
 }

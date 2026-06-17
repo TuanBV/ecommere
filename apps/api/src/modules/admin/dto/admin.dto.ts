@@ -86,6 +86,11 @@ export class AdminProductDto {
   @IsArray()
   @IsString({ each: true })
   images?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  relatedProductIds?: string[];
 }
 
 export class UpdateAdminProductDto extends PartialType(AdminProductDto) {}
