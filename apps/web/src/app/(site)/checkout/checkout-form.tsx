@@ -513,6 +513,7 @@ function PolicyItem({
     <Link
       href={href}
       target="_blank"
+      rel="noopener noreferrer"
       className="flex items-start gap-3 rounded-xl border border-blue-100 bg-white p-3 transition-all hover:border-blue-300 hover:shadow-sm"
     >
       <span

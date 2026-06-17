@@ -146,7 +146,11 @@ export function SiteFooter() {
                 do Sở KH&amp;ĐT TP.HN cấp ngày: 18/11/2024
               </p>
 
-              <a href="http://online.gov.vn/Home/WebDetails/140706" rel="nofollow" target="_blank">
+              <a
+                href="https://online.gov.vn/Home/WebDetails/140706"
+                rel="nofollow noopener noreferrer"
+                target="_blank"
+              >
                 <img
                   src="/client/images/logoBCT.png"
                   alt="Chứng nhận Đã thông báo Bộ Công Thương"
@@ -169,6 +173,7 @@ export function SiteFooter() {
             className="text-gray-400 transition-colors hover:text-blue-600"
             aria-label="Facebook"
             target="_blank"
+            rel="noopener noreferrer"
           >
             <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
@@ -302,6 +307,7 @@ function FloatingIcon({
     <a
       href={href}
       target="_blank"
+      rel="noopener noreferrer"
       className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-gray-100 bg-white shadow-xl transition-all duration-300 hover:scale-110"
     >
       <img width={32} height={32} src={img} alt={alt} className="h-8 w-8" />
