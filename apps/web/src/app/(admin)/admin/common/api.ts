@@ -18,6 +18,17 @@ export function authRequest<T>(path: string, token: string, init?: RequestInit) 
   });
 }
 
+export async function authUpload<T>(path: string, token: string, body: FormData): Promise<T> {
+  const res = await fetch(`${apiBaseUrl}${path}`, {
+    method: 'POST',
+    body,
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const json = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+  if (!res.ok) throw new Error(messageForStatus(res.status, json));
+  return json?.data as T;
+}
+
 export function handleError(
   err: unknown,
   setError: (value: string) => void,

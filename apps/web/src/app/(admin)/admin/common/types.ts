@@ -52,6 +52,14 @@ export type AdminProduct = {
   status?: number | null;
   image?: string | null;
   description?: string | null;
+  content?: string | null;
+  specification?: string | null;
+  variantName?: string | null;
+  color?: string | null;
+  size?: string | null;
+  groupId?: string | null;
+  policyId?: string | null;
+  images?: { id: string; imageUrl: string; sortOrder?: number | null }[];
 };
 
 export type AdminOrder = {

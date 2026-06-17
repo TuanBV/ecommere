@@ -1,5 +1,23 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { randomUUID } from 'crypto';
+import { diskStorage } from 'multer';
+import { mkdirSync } from 'node:fs';
+import { extname, isAbsolute, join } from 'node:path';
 import { ok } from '../../common/api-response';
 import { AdminRoleGuard } from '../auth/guards/admin-role.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -51,6 +69,37 @@ export class AdminController {
   @Delete('products/:id')
   async deleteProduct(@Param('id') id: string) {
     return ok(await this.admin.softDeleteProduct(id));
+  }
+
+  @Post('uploads/product-image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (_req, _file, callback) => {
+          const uploadDir = process.env.UPLOAD_DIR ?? 'uploads';
+          const root = isAbsolute(uploadDir) ? uploadDir : join(process.cwd(), uploadDir);
+          const destination = join(root, 'products');
+          mkdirSync(destination, { recursive: true });
+          callback(null, destination);
+        },
+        filename: (_req, file, callback) => {
+          const extension = extname(file.originalname).toLowerCase() || '.webp';
+          callback(null, `${randomUUID()}${extension}`);
+        }
+      }),
+      fileFilter: (_req, file, callback) => {
+        if (!/^image\/(avif|gif|jpe?g|png|webp)$/i.test(file.mimetype)) {
+          callback(new BadRequestException('Only image files are allowed'), false);
+          return;
+        }
+        callback(null, true);
+      },
+      limits: { fileSize: 5 * 1024 * 1024 }
+    })
+  )
+  async uploadProductImage(@UploadedFile() file?: Express.Multer.File) {
+    if (!file) throw new BadRequestException('Image file is required');
+    return ok({ url: `/uploads/products/${file.filename}` });
   }
 
   @Get('orders')

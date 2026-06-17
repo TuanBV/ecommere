@@ -44,6 +44,10 @@ export function AdminPanel({ view = 'dashboard' }: { view?: Tab }) {
 
   if (!ready || !token) return <Notice>Đang chuyển tới trang đăng nhập...</Notice>;
 
+  if (view === 'products') {
+    return <ProductsView token={token} onUnauthorized={logout} />;
+  }
+
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -63,7 +67,6 @@ export function AdminPanel({ view = 'dashboard' }: { view?: Tab }) {
       </div>
 
       {view === 'dashboard' ? <DashboardView token={token} onUnauthorized={logout} /> : null}
-      {view === 'products' ? <ProductsView token={token} onUnauthorized={logout} /> : null}
       {view === 'orders' ? <OrdersView token={token} onUnauthorized={logout} /> : null}
       {view === 'banners' ? (
         <MediaView token={token} onUnauthorized={logout} resource="banners" title="Banner" />

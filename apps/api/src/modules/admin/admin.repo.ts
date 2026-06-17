@@ -53,54 +53,122 @@ export class AdminRepository {
             }
           : {})
       },
-      include: { category: true, brand: true },
+      include: { category: true, brand: true, images: { where: { delFlag: 0 }, orderBy: { sortOrder: 'asc' } } },
       orderBy: { updatedDate: 'desc' },
       take: 100
     });
   }
 
-  createProduct(body: AdminProductDto) {
-    return this.prisma.product.create({
-      data: {
-        id: randomUUID(),
+  async createProduct(body: AdminProductDto) {
+    const id = randomUUID();
+    const images = normalizeImages(body.images);
+
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.create({
+        data: {
+        id,
         title: String(body.title),
         sku: String(body.sku),
         slug: String(body.slug),
         categoryId: String(body.categoryId),
         brandId: String(body.brandId),
+        ...(body.policyId ? { policyId: String(body.policyId) } : {}),
         price: new Prisma.Decimal(String(body.price ?? 0)),
         salePrice: new Prisma.Decimal(String(body.salePrice ?? 0)),
         stockQty: Number(body.stockQty ?? 0),
         status: Number(body.status ?? 1),
         image: body.image ? String(body.image) : null,
         description: body.description ? String(body.description) : null,
+        content: body.content ? String(body.content) : null,
+        specification: body.specification ? String(body.specification) : null,
+        variantName: body.variantName ? String(body.variantName) : null,
+        color: body.color ? String(body.color) : null,
+        size: body.size ? String(body.size) : null,
+        groupId: body.groupId ? String(body.groupId) : null,
         createdDate: new Date(),
         updatedDate: new Date()
       }
+      });
+
+      if (images.length) {
+        await tx.productImage.createMany({
+          data: images.map((imageUrl, index) => ({
+            id: randomUUID(),
+            productId: id,
+            imageUrl,
+            sortOrder: index,
+            delFlag: 0,
+            createdDate: new Date(),
+            updatedDate: new Date()
+          }))
+        });
+      }
+
+      return product;
     });
   }
 
-  updateProduct(id: string, body: UpdateAdminProductDto) {
-    return this.prisma.product.update({
-      where: { id },
-      data: {
-        ...(body.title !== undefined ? { title: String(body.title) } : {}),
-        ...(body.sku !== undefined ? { sku: String(body.sku) } : {}),
-        ...(body.slug !== undefined ? { slug: String(body.slug) } : {}),
-        ...(body.categoryId !== undefined ? { categoryId: String(body.categoryId) } : {}),
-        ...(body.brandId !== undefined ? { brandId: String(body.brandId) } : {}),
-        ...(body.price !== undefined ? { price: new Prisma.Decimal(String(body.price)) } : {}),
-        ...(body.salePrice !== undefined
-          ? { salePrice: new Prisma.Decimal(String(body.salePrice)) }
-          : {}),
-        ...(body.stockQty !== undefined ? { stockQty: Number(body.stockQty) } : {}),
-        ...(body.status !== undefined ? { status: Number(body.status) } : {}),
-        ...(body.image !== undefined ? { image: body.image ? String(body.image) : null } : {}),
-        ...(body.description !== undefined
-          ? { description: body.description ? String(body.description) : null }
-          : {}),
-        updatedDate: new Date()
+  async updateProduct(id: string, body: UpdateAdminProductDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.update({
+        where: { id },
+        data: {
+          ...(body.title !== undefined ? { title: String(body.title) } : {}),
+          ...(body.sku !== undefined ? { sku: String(body.sku) } : {}),
+          ...(body.slug !== undefined ? { slug: String(body.slug) } : {}),
+          ...(body.categoryId !== undefined ? { categoryId: String(body.categoryId) } : {}),
+          ...(body.brandId !== undefined ? { brandId: String(body.brandId) } : {}),
+          ...(body.policyId !== undefined
+            ? { policyId: body.policyId ? String(body.policyId) : null }
+            : {}),
+          ...(body.price !== undefined ? { price: new Prisma.Decimal(String(body.price)) } : {}),
+          ...(body.salePrice !== undefined
+            ? { salePrice: new Prisma.Decimal(String(body.salePrice)) }
+            : {}),
+          ...(body.stockQty !== undefined ? { stockQty: Number(body.stockQty) } : {}),
+          ...(body.status !== undefined ? { status: Number(body.status) } : {}),
+          ...(body.image !== undefined ? { image: body.image ? String(body.image) : null } : {}),
+          ...(body.description !== undefined
+            ? { description: body.description ? String(body.description) : null }
+            : {}),
+          ...(body.content !== undefined ? { content: body.content ? String(body.content) : null } : {}),
+          ...(body.specification !== undefined
+            ? { specification: body.specification ? String(body.specification) : null }
+            : {}),
+          ...(body.variantName !== undefined
+            ? { variantName: body.variantName ? String(body.variantName) : null }
+            : {}),
+          ...(body.color !== undefined ? { color: body.color ? String(body.color) : null } : {}),
+          ...(body.size !== undefined ? { size: body.size ? String(body.size) : null } : {}),
+          ...(body.groupId !== undefined
+            ? { groupId: body.groupId ? String(body.groupId) : null }
+            : {}),
+          updatedDate: new Date()
+        }
+      });
+
+      if (body.images !== undefined) {
+        await tx.productImage.updateMany({
+          where: { productId: id, delFlag: 0 },
+          data: { delFlag: 1, updatedDate: new Date() }
+        });
+        const images = normalizeImages(body.images);
+        if (images.length) {
+          await tx.productImage.createMany({
+            data: images.map((imageUrl, index) => ({
+              id: randomUUID(),
+              productId: id,
+              imageUrl,
+              sortOrder: index,
+              delFlag: 0,
+              createdDate: new Date(),
+              updatedDate: new Date()
+            }))
+          });
+        }
       }
+
+      return product;
     });
   }
 
@@ -465,4 +533,8 @@ export class AdminRepository {
     });
     return { ...item, id: item.id.toString() };
   }
+}
+
+function normalizeImages(images?: string[]) {
+  return Array.from(new Set((images ?? []).map((item) => String(item).trim()).filter(Boolean)));
 }

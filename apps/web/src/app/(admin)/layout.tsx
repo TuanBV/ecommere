@@ -69,31 +69,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="flex gap-2 overflow-x-auto p-3 lg:grid lg:gap-1">
-          <AdminLink href="/admin" icon={<LayoutDashboard size={18} />}>
+          <AdminLink href="/admin" icon={<LayoutDashboard size={18} />} pathname={pathname}>
             Tong quan
           </AdminLink>
-          <AdminLink href="/admin/products" icon={<Package size={18} />}>
+          <AdminLink href="/admin/products" icon={<Package size={18} />} pathname={pathname}>
             San pham
           </AdminLink>
-          <AdminLink href="/admin/orders" icon={<ShoppingBag size={18} />}>
+          <AdminLink href="/admin/orders" icon={<ShoppingBag size={18} />} pathname={pathname}>
             Don hang
           </AdminLink>
-          <AdminLink href="/admin/banners" icon={<Images size={18} />}>
+          <AdminLink href="/admin/banners" icon={<Images size={18} />} pathname={pathname}>
             Banner
           </AdminLink>
-          <AdminLink href="/admin/sliders" icon={<Presentation size={18} />}>
+          <AdminLink href="/admin/sliders" icon={<Presentation size={18} />} pathname={pathname}>
             Slide
           </AdminLink>
-          <AdminLink href="/admin/news" icon={<Newspaper size={18} />}>
+          <AdminLink href="/admin/news" icon={<Newspaper size={18} />} pathname={pathname}>
             Tin tuc
           </AdminLink>
-          <AdminLink href="/admin/contacts" icon={<Mail size={18} />}>
+          <AdminLink href="/admin/contacts" icon={<Mail size={18} />} pathname={pathname}>
             Lien he
           </AdminLink>
-          <AdminLink href="/admin/users" icon={<Users size={18} />}>
+          <AdminLink href="/admin/users" icon={<Users size={18} />} pathname={pathname}>
             Tai khoan
           </AdminLink>
-          <AdminLink href="/admin/settings" icon={<Settings size={18} />}>
+          <AdminLink href="/admin/settings" icon={<Settings size={18} />} pathname={pathname}>
             Setting
           </AdminLink>
           <Link
@@ -113,16 +113,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 function AdminLink({
   href,
   icon,
+  pathname,
   children
 }: {
   href: string;
   icon: React.ReactNode;
+  pathname: string;
   children: React.ReactNode;
 }) {
+  const active = href === '/admin' ? pathname === href : pathname.startsWith(href);
+
   return (
     <Link
       href={href}
-      className="flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+      className={`flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-semibold hover:bg-blue-50 hover:text-blue-700 ${
+        active ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+      }`}
     >
       {icon}
       <span>{children}</span>
