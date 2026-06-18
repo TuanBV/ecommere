@@ -4,15 +4,19 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Boxes,
   Images,
   LayoutDashboard,
+  LogOut,
   Mail,
   Newspaper,
   Package,
   Presentation,
   Settings,
   Shield,
+  ShieldCheck,
   ShoppingBag,
+  Tags,
   Users
 } from 'lucide-react';
 
@@ -55,53 +59,72 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === '/admin/login') return <>{children}</>;
   if (!authenticated) return null;
 
+  function logout() {
+    localStorage.removeItem(adminTokenKey);
+    localStorage.removeItem('core_admin_refresh_token');
+    localStorage.removeItem('core_admin_user');
+    router.replace('/admin/login');
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-700 lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="border-b border-gray-200 bg-white lg:min-h-screen lg:border-b-0 lg:border-r">
-        <div className="flex h-16 items-center gap-3 border-b border-gray-100 px-5">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-700 text-white">
-            <Shield size={18} />
-          </div>
-          <div>
-            <div className="text-sm font-bold uppercase text-gray-900">Admin</div>
-            <div className="text-xs text-gray-500">Green Home Shop</div>
-          </div>
+    <div className="min-h-screen bg-[#ededed] text-slate-700 lg:grid lg:grid-cols-[220px_1fr]">
+      <aside className="border-b border-slate-100 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:border-b-0">
+        <div className="flex h-[104px] items-center px-5">
+          <img
+            src="/client/images/logo.png"
+            alt="GreenHome"
+            className="h-auto w-[176px] object-contain"
+          />
         </div>
 
-        <nav className="flex gap-2 overflow-x-auto p-3 lg:grid lg:gap-1">
+        <nav className="flex gap-2 overflow-x-auto p-3 lg:grid lg:flex-1 lg:content-start lg:gap-1">
           <AdminLink href="/admin" icon={<LayoutDashboard size={18} />} pathname={pathname}>
-            Tong quan
+            Dashboard
+          </AdminLink>
+          <AdminLink href="/admin/users" icon={<Users size={18} />} pathname={pathname}>
+            User
+          </AdminLink>
+          <AdminLink href="/admin/categories" icon={<Boxes size={18} />} pathname={pathname}>
+            Danh mục
+          </AdminLink>
+          <AdminLink href="/admin/brands" icon={<Tags size={18} />} pathname={pathname}>
+            Thương hiệu
           </AdminLink>
           <AdminLink href="/admin/products" icon={<Package size={18} />} pathname={pathname}>
-            San pham
+            Sản phẩm
           </AdminLink>
-          <AdminLink href="/admin/orders" icon={<ShoppingBag size={18} />} pathname={pathname}>
-            Don hang
+          <AdminLink href="/admin/sliders" icon={<Presentation size={18} />} pathname={pathname}>
+            Slider
           </AdminLink>
           <AdminLink href="/admin/banners" icon={<Images size={18} />} pathname={pathname}>
             Banner
           </AdminLink>
-          <AdminLink href="/admin/sliders" icon={<Presentation size={18} />} pathname={pathname}>
-            Slide
-          </AdminLink>
           <AdminLink href="/admin/news" icon={<Newspaper size={18} />} pathname={pathname}>
-            Tin tuc
+            Tin tức
+          </AdminLink>
+          <AdminLink href="/admin/policies" icon={<ShieldCheck size={18} />} pathname={pathname}>
+            Chính sách
+          </AdminLink>
+          <AdminLink href="/admin/orders" icon={<ShoppingBag size={18} />} pathname={pathname}>
+            Đơn hàng
           </AdminLink>
           <AdminLink href="/admin/contacts" icon={<Mail size={18} />} pathname={pathname}>
-            Lien he
+            Liên hệ
           </AdminLink>
-          <AdminLink href="/admin/users" icon={<Users size={18} />} pathname={pathname}>
-            Tai khoan
-          </AdminLink>
+        </nav>
+
+        <nav className="grid gap-1 p-3">
           <AdminLink href="/admin/settings" icon={<Settings size={18} />} pathname={pathname}>
-            Setting
+            Cài đặt
           </AdminLink>
-          <Link
-            href="/"
-            className="flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+          <button
+            type="button"
+            onClick={logout}
+            className="flex h-10 shrink-0 items-center gap-3 rounded-[8px] px-3 text-left text-sm font-semibold text-rose-500 hover:bg-rose-50"
           >
-            Ve website
-          </Link>
+            <LogOut size={18} />
+            <span>Đăng xuất</span>
+          </button>
         </nav>
       </aside>
 
@@ -126,8 +149,8 @@ function AdminLink({
   return (
     <Link
       href={href}
-      className={`flex h-10 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-semibold hover:bg-blue-50 hover:text-blue-700 ${
-        active ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+      className={`flex h-10 shrink-0 items-center gap-3 rounded-[8px] px-3 text-sm font-semibold transition hover:bg-blue-50 hover:text-blue-600 ${
+        active ? 'bg-slate-50 text-blue-500 ring-4 ring-slate-100' : 'text-slate-900'
       }`}
     >
       {icon}

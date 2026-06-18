@@ -10,7 +10,9 @@ import {
   Home,
   Package,
   Newspaper,
-  Phone
+  Phone,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { money } from '@/lib/api';
@@ -21,16 +23,21 @@ type Category = {
   title: string;
   slug: string | null;
   logo?: string | null;
-  childs?: {
+  brands?: {
     id: string;
     title: string;
     slug: string | null;
+    logo?: string | null;
   }[];
 };
 
 export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   const [open, setOpen] = useState(false);
   const [showTop, setShowTop] = useState(false);
+  const [mobileExpandedCategoryIds, setMobileExpandedCategoryIds] = useState<string[]>([]);
+  const [desktopExpandedCategoryIds, setDesktopExpandedCategoryIds] = useState<string[]>([]);
+  const [activeCategorySlug, setActiveCategorySlug] = useState('');
+  const [activeBrandSlug, setActiveBrandSlug] = useState('');
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const items = useCart((state) => state.items);
@@ -44,17 +51,62 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
 
   const menuCategories = categories.length ? categories : defaultCategories;
 
-  useEffect(() => {
-    document.body.style.overflow = open ? 'hidden' : '';
+  const activeCategoryIds = useMemo(
+    () =>
+      menuCategories
+        .filter(
+          (category) =>
+            category.slug === activeCategorySlug ||
+            Boolean(
+              activeBrandSlug && category.brands?.some((brand) => brand.slug === activeBrandSlug)
+            )
+        )
+        .map((category) => category.id),
+    [activeBrandSlug, activeCategorySlug, menuCategories]
+  );
 
+  function toggleMobileCategory(categoryId: string) {
+    setMobileExpandedCategoryIds((current) =>
+      current.includes(categoryId)
+        ? current.filter((item) => item !== categoryId)
+        : [...current, categoryId]
+    );
+  }
+
+  function toggleDesktopCategory(categoryId: string) {
+    setDesktopExpandedCategoryIds((current) => (current.includes(categoryId) ? [] : [categoryId]));
+  }
+
+  function syncActiveFiltersFromLocation() {
+    const params = new URLSearchParams(window.location.search);
+    setActiveCategorySlug(params.get('category') ?? '');
+    setActiveBrandSlug(params.get('brand') ?? '');
+  }
+
+  useEffect(() => {
+    syncActiveFiltersFromLocation();
+  }, []);
+
+  useEffect(() => {
     if (open) {
+      syncActiveFiltersFromLocation();
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = scrollbarWidth ? `${scrollbarWidth}px` : '';
       closeButtonRef.current?.focus();
+      if (activeCategoryIds.length) {
+        setMobileExpandedCategoryIds((current) => [...new Set([...current, ...activeCategoryIds])]);
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
 
     return () => {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
-  }, [open]);
+  }, [activeCategoryIds, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -111,103 +163,142 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
         <ChevronRight size={24} className="-rotate-90 text-gray-700" />
       </button>
 
-      {open && (
-        <div
-          id="mobileSidebarLayer"
-          aria-label="Đóng menu"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[80] bg-black/60 transition-opacity duration-300"
+      <div
+        id="mobileSidebarLayer"
+        aria-label="Đóng menu"
+        onClick={() => setOpen(false)}
+        className={[
+          'fixed inset-0 z-[80] bg-black/60 transition-opacity duration-300 ease-out',
+          open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        ].join(' ')}
+      >
+        <aside
+          id="mobileSidebar"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu dieu huong"
+          onClick={(event) => event.stopPropagation()}
+          className={[
+            'fixed left-0 top-0 z-[90] flex h-screen w-[310px] max-w-[86vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out will-change-transform',
+            open ? 'translate-x-0' : '-translate-x-full'
+          ].join(' ')}
         >
-          <aside
-            id="mobileSidebar"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu dieu huong"
-            onClick={(event) => event.stopPropagation()}
-            className="fixed left-0 top-0 z-[90] flex h-screen w-[310px] max-w-[86vw] flex-col bg-white shadow-2xl transition-transform duration-300 ease-out"
-          >
-            <div className="flex items-center justify-between border-b border-gray-50 p-4">
-              <Link href="/" aria-label="GreenHome" className="flex h-10 items-center">
-                <picture>
-                  <source
-                    type="image/webp"
-                    srcSet="/client/images/greenhome-logo-500.lossless.webp"
-                  />
-                  <img
-                    src="/client/images/logo.png"
-                    alt="Logo Green Home Shop"
-                    className="h-auto w-[180px] object-contain md:w-[200px]"
-                    width={200}
-                    height={43}
-                  />
-                </picture>
-              </Link>
+          <div className="flex items-center justify-between border-b border-gray-50 p-4">
+            <Link href="/" aria-label="GreenHome" className="flex h-10 items-center">
+              <picture>
+                <source
+                  type="image/webp"
+                  srcSet="/client/images/greenhome-logo-500.lossless.webp"
+                />
+                <img
+                  src="/client/images/logo.png"
+                  alt="Logo Green Home Shop"
+                  className="h-auto w-[180px] object-contain md:w-[200px]"
+                  width={200}
+                  height={43}
+                />
+              </picture>
+            </Link>
 
-              <button
-                ref={closeButtonRef}
-                type="button"
-                className="cursor-pointer p-2 text-gray-700"
-                onClick={() => setOpen(false)}
-                aria-label="Đóng menu"
-              >
-                <X size={24} />
-              </button>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              className="cursor-pointer p-2 text-gray-700"
+              onClick={() => setOpen(false)}
+              aria-label="Đóng menu"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-2 py-2">
+            <MobileMenuLink href="/" icon={<Home size={22} />} onClick={() => setOpen(false)}>
+              Trang chủ
+            </MobileMenuLink>
+
+            <MobileMenuLink
+              href="/products"
+              icon={<Package size={22} fill="currentColor" />}
+              onClick={() => setOpen(false)}
+            >
+              Sản phẩm
+            </MobileMenuLink>
+
+            <MobileMenuLink
+              href="/news"
+              icon={<Newspaper size={22} />}
+              onClick={() => setOpen(false)}
+            >
+              Tin tức
+            </MobileMenuLink>
+
+            <div className="my-2 px-3">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-600">
+                Danh mục sản phẩm
+              </p>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 py-2">
-              <MobileMenuLink href="/" icon={<Home size={22} />} onClick={() => setOpen(false)}>
-                Trang chủ
-              </MobileMenuLink>
-
-              <MobileMenuLink
-                href="/products"
-                icon={<Package size={22} fill="currentColor" />}
-                onClick={() => setOpen(false)}
-              >
-                Sản phẩm
-              </MobileMenuLink>
-
-              <MobileMenuLink
-                href="/news"
-                icon={<Newspaper size={22} />}
-                onClick={() => setOpen(false)}
-              >
-                Tin tức
-              </MobileMenuLink>
-
-              <div className="my-2 px-3">
-                <p className="text-sm font-semibold uppercase tracking-widest text-gray-600">
-                  Danh mục sản phẩm
-                </p>
-              </div>
-
-              <div className="grid gap-1">
-                {menuCategories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/products?category=${cat.slug ?? ''}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center rounded-xl p-3 transition-all hover:bg-blue-50"
-                  >
-                    <ChevronRight size={18} className="w-7 shrink-0 text-gray-600" />
-                    <span className="truncate text-base font-medium text-gray-700">
-                      {cat.title}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-
-              <a
-                href="tel:0852262666"
-                className="mt-5 flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-base font-semibold text-white"
-              >
-                <Phone size={18} />
-                0852 262 666
-              </a>
+            <div className="grid gap-1">
+              {menuCategories.map((cat) => (
+                <div key={cat.id} className="rounded-xl">
+                  <div className="flex items-center rounded-xl transition-all hover:bg-blue-50">
+                    <Link
+                      href={`/products?category=${cat.slug ?? ''}`}
+                      onClick={() => setOpen(false)}
+                      className="flex min-w-0 flex-1 items-center p-3"
+                    >
+                      <ChevronRight size={18} className="w-7 shrink-0 text-gray-600" />
+                      <span className="truncate text-base font-semibold text-gray-700">
+                        {cat.title}
+                      </span>
+                    </Link>
+                    {cat.brands?.length ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleMobileCategory(cat.id)}
+                        className="mr-2 grid h-8 w-8 shrink-0 place-items-center rounded-lg text-blue-600 hover:bg-white"
+                        aria-label={
+                          mobileExpandedCategoryIds.includes(cat.id)
+                            ? 'Đóng danh sách thương hiệu'
+                            : 'Mở danh sách thương hiệu'
+                        }
+                      >
+                        {mobileExpandedCategoryIds.includes(cat.id) ? (
+                          <Minus size={18} />
+                        ) : (
+                          <Plus size={18} />
+                        )}
+                      </button>
+                    ) : null}
+                  </div>
+                  {cat.brands?.length && mobileExpandedCategoryIds.includes(cat.id) ? (
+                    <div className="ml-10 grid gap-1 pb-1">
+                      {cat.brands.map((brand) => (
+                        <Link
+                          key={brand.id}
+                          href={`/products?category=${cat.slug ?? ''}&brand=${brand.slug ?? ''}`}
+                          onClick={() => setOpen(false)}
+                          className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+                        >
+                          {brand.title}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
             </div>
-          </aside>
-        </div>
-      )}
+
+            <a
+              href="tel:0852262666"
+              className="mt-5 flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-base font-semibold text-white"
+            >
+              <Phone size={18} />
+              0852 262 666
+            </a>
+          </div>
+        </aside>
+      </div>
 
       <section
         id="header"
@@ -249,7 +340,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             >
               <div className="relative h-[46px] min-h-[46px]">
                 <input
-                  name="search"
+                  name="q"
                   type="text"
                   placeholder="Tìm kiếm sản phẩm..."
                   autoComplete="off"
@@ -291,7 +382,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             </div>
           </div>
 
-          <div className="hidden h-[48px] min-h-[48px] items-center overflow-hidden border-t border-gray-100 bg-[#e6effd] text-gray-700 md:flex">
+          <div className="hidden h-[48px] min-h-[48px] items-center overflow-visible border-t border-gray-100 bg-[#e6effd] text-gray-700 md:flex">
             <div className="container flex h-[48px] items-center">
               <button
                 type="button"
@@ -306,16 +397,17 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
 
               <nav
                 aria-label="Danh muc san pham"
-                className="ml-4 flex h-full flex-1 items-center overflow-x-auto whitespace-nowrap text-[15px] font-medium"
+                className="ml-4 flex h-full flex-1 items-center overflow-visible whitespace-nowrap text-[15px] font-medium"
               >
                 {menuCategories.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/products?category=${cat.slug ?? ''}`}
-                    className="flex h-[48px] items-center px-4 leading-none text-gray-600 hover:text-blue-900"
-                  >
-                    {cat.title}
-                  </Link>
+                  <div key={cat.id} className="relative flex h-full items-center">
+                    <Link
+                      href={`/products?category=${cat.slug ?? ''}`}
+                      className="flex h-[48px] items-center px-4 pr-2 leading-none text-gray-600 hover:text-blue-900"
+                    >
+                      {cat.title}
+                    </Link>
+                  </div>
                 ))}
               </nav>
             </div>

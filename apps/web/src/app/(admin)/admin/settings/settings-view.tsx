@@ -59,9 +59,9 @@ export function SettingsView({
     <div className="grid gap-5 lg:grid-cols-[420px_1fr]">
       <form
         onSubmit={submit}
-        className="grid content-start gap-3 rounded-2xl bg-white p-5 shadow-sm"
+        className="grid content-start gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
       >
-        <h2 className="text-lg font-semibold text-gray-800">
+        <h2 className="border-b border-slate-200 pb-4 text-xs font-black uppercase tracking-wide text-slate-600">
           {editing ? 'Sửa setting' : 'Thêm setting'}
         </h2>
         {error ? (
@@ -80,19 +80,19 @@ export function SettingsView({
           <textarea
             name="paramValue"
             defaultValue={editing?.paramValue ?? ''}
-            className="min-h-28 rounded-lg border border-gray-200 px-3 py-2"
+            className="min-h-28 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
           />
         </label>
         <Field name="description" label="Mô tả" defaultValue={editing?.description ?? ''} />
         <div className="flex gap-2">
-          <button className="h-10 rounded-lg bg-blue-700 px-4 text-sm font-semibold text-white">
+          <button className="h-11 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700">
             Lưu setting
           </button>
           {editing ? (
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="h-10 rounded-lg border border-gray-200 px-4 text-sm font-semibold"
+              className="h-11 rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-200"
             >
               Hủy
             </button>
@@ -100,8 +100,8 @@ export function SettingsView({
         </div>
       </form>
 
-      <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
-        <div className="border-b border-gray-100 p-4 font-semibold text-gray-800">
+      <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="border-b border-slate-100 bg-slate-50 px-5 py-4 text-xs font-black uppercase text-slate-500">
           Danh sách setting
         </div>
         <div className="divide-y divide-gray-100">

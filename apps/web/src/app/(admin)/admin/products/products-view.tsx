@@ -19,7 +19,7 @@ import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 're
 import 'suneditor/dist/css/suneditor.min.css';
 import { mediaUrl, money } from '@/lib/api';
 import { authRequest, authUpload, handleError } from '../common/api';
-import type { AdminProduct, OptionItem } from '../common/types';
+import type { AdminPolicy, AdminProduct, OptionItem } from '../common/types';
 
 const SunEditor = dynamic(() => import('suneditor-react'), { ssr: false });
 
@@ -36,6 +36,7 @@ type ProductForm = {
   slug: string;
   categoryId: string;
   brandId: string;
+  policyId: string;
   groupId: string;
   relatedProductIds: string[];
   price: string;
@@ -67,6 +68,7 @@ const emptyProduct: ProductForm = {
   slug: '',
   categoryId: '',
   brandId: '',
+  policyId: '',
   groupId: '',
   relatedProductIds: [],
   price: '',
@@ -92,6 +94,7 @@ export function ProductsView({
   const [items, setItems] = useState<ProductRow[]>([]);
   const [categories, setCategories] = useState<OptionItem[]>([]);
   const [brands, setBrands] = useState<OptionItem[]>([]);
+  const [policies, setPolicies] = useState<AdminPolicy[]>([]);
   const [form, setForm] = useState<ProductForm>(emptyProduct);
   const [errors, setErrors] = useState<FormErrors>({});
   const [toast, setToast] = useState<Toast | null>(null);
@@ -122,14 +125,16 @@ export function ProductsView({
   async function load() {
     setLoading(true);
     try {
-      const [products, categoryList, brandList] = await Promise.all([
+      const [products, categoryList, brandList, policyList] = await Promise.all([
         authRequest<ProductRow[]>('/admin/products', token),
         authRequest<OptionItem[]>('/admin/categories', token),
-        authRequest<OptionItem[]>('/admin/brands', token)
+        authRequest<OptionItem[]>('/admin/brands', token),
+        authRequest<AdminPolicy[]>('/admin/policies', token)
       ]);
       setItems(products);
       setCategories(categoryList);
       setBrands(brandList);
+      setPolicies(policyList);
     } catch (err) {
       handleError(err, showError, onUnauthorized);
     } finally {
@@ -183,6 +188,7 @@ export function ProductsView({
       slug: item.slug ?? '',
       categoryId: item.categoryId,
       brandId: item.brandId,
+      policyId: item.policyId ?? '',
       groupId: item.groupId ?? '',
       relatedProductIds: relatedIdsFor(item),
       price: String(item.price ?? ''),
@@ -210,6 +216,7 @@ export function ProductsView({
       slug: item.slug ? `${item.slug}-copy` : '',
       categoryId: item.categoryId,
       brandId: item.brandId,
+      policyId: item.policyId ?? '',
       groupId: item.groupId ?? '',
       relatedProductIds: item.groupId
         ? items
@@ -269,6 +276,7 @@ export function ProductsView({
       slug: form.slug.trim(),
       categoryId: form.categoryId,
       brandId: form.brandId,
+      policyId: form.policyId,
       price: form.price,
       salePrice: form.salePrice || '0',
       stockQty: Number(form.stockQty),
@@ -409,6 +417,7 @@ export function ProductsView({
           errors={errors}
           form={form}
           products={items}
+          policies={policies}
           saving={saving}
           uploading={uploading}
           onCancel={() => {
@@ -460,7 +469,7 @@ function ProductList({
   onDelete: (item: ProductRow) => void;
 }) {
   return (
-    <div className="mx-auto max-w-[1280px]">
+    <div className="mx-auto">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Quản lý sản phẩm</h1>
@@ -623,6 +632,7 @@ function ProductList({
 function ProductFormScreen({
   form,
   products,
+  policies,
   categories,
   brands,
   errors,
@@ -635,6 +645,7 @@ function ProductFormScreen({
 }: {
   form: ProductForm;
   products: ProductRow[];
+  policies: AdminPolicy[];
   categories: OptionItem[];
   brands: OptionItem[];
   errors: FormErrors;
@@ -676,7 +687,7 @@ function ProductFormScreen({
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto grid max-w-[1280px] gap-4">
+    <form onSubmit={onSubmit} className="mx-auto grid gap-4">
       <Section
         title="Thông tin sản phẩm"
         actions={
@@ -754,8 +765,17 @@ function ProductFormScreen({
               </option>
             ))}
           </Select>
-          <Select label="Chính sách" value="" onChange={() => undefined}>
+          <Select
+            label="Chính sách"
+            value={form.policyId}
+            onChange={(value) => onUpdate('policyId', value)}
+          >
             <option value="">Chính sách mặc định</option>
+            {policies.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.packageName}
+              </option>
+            ))}
           </Select>
         </div>
       </Section>
@@ -981,7 +1001,7 @@ function ProductPreviewModal({
 
   return (
     <div className="fixed inset-0 z-[1000] bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="mx-auto flex max-h-[92vh] max-w-[1280px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="mx-auto flex max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <div>
             <div className="text-xs font-black uppercase text-blue-600">Preview sản phẩm</div>

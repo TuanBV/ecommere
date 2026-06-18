@@ -7,6 +7,12 @@ type Category = {
   title: string;
   slug: string | null;
   logo?: string | null;
+  brands?: {
+    id: string;
+    title: string;
+    slug: string | null;
+    logo?: string | null;
+  }[];
 };
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {

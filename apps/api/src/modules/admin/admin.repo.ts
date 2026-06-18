@@ -8,18 +8,22 @@ import {
   AdminContactStatusDto,
   AdminOrderStatusDto,
   AdminNewsDto,
+  AdminPolicyDto,
   AdminProductDto,
   AdminSettingDto,
   AdminSliderDto,
+  AdminTaxonomyDto,
   AdminUserDto,
   UpdateAdminBannerDto,
   UpdateAdminNewsDto,
+  UpdateAdminPolicyDto,
   UpdateAdminProductDto,
   UpdateAdminSliderDto,
+  UpdateAdminTaxonomyDto,
   UpdateAdminUserDto
 } from './dto/admin.dto';
 
-type AdminTable = 'category' | 'brand' | 'review' | 'banner' | 'slider' | 'news' | 'contact';
+type AdminTable = 'category' | 'brand' | 'review' | 'banner' | 'slider' | 'news' | 'contact' | 'policy';
 
 @Injectable()
 export class AdminRepository {
@@ -239,7 +243,7 @@ export class AdminRepository {
   order(id: string) {
     return this.prisma.order.findUnique({
       where: { id },
-      include: { details: { include: { product: true } } }
+      include: { details: { include: { product: { include: { category: true } } } } }
     });
   }
 
@@ -280,7 +284,168 @@ export class AdminRepository {
         return this.prisma.news.findMany({ where: { delFlag: 0 }, take: 100 });
       case 'contact':
         return this.prisma.contact.findMany({ where: { delFlag: 0 }, take: 100 });
+      case 'policy':
+        return this.prisma.policy.findMany({
+          where: { delFlag: 0 },
+          include: {
+            products: {
+              where: { delFlag: 0 },
+              select: { id: true, title: true, sku: true },
+              orderBy: { updatedDate: 'desc' }
+            }
+          },
+          orderBy: { updatedDate: 'desc' },
+          take: 100
+        });
     }
+  }
+
+  createCategory(body: AdminTaxonomyDto) {
+    return this.prisma.category.create({
+      data: {
+        id: randomUUID(),
+        title: String(body.title ?? '').trim(),
+        slug: body.slug ? String(body.slug).trim() : null,
+        logo: body.logo ? String(body.logo).trim() : null,
+        priority: Number(body.priority ?? 0),
+        delFlag: 0,
+        createdDate: new Date(),
+        updatedDate: new Date()
+      }
+    });
+  }
+
+  updateCategory(id: string, body: UpdateAdminTaxonomyDto) {
+    return this.prisma.category.update({
+      where: { id },
+      data: {
+        ...(body.title !== undefined ? { title: String(body.title).trim() } : {}),
+        ...(body.slug !== undefined ? { slug: body.slug ? String(body.slug).trim() : null } : {}),
+        ...(body.logo !== undefined ? { logo: body.logo ? String(body.logo).trim() : null } : {}),
+        ...(body.priority !== undefined ? { priority: Number(body.priority) } : {}),
+        updatedDate: new Date()
+      }
+    });
+  }
+
+  softDeleteCategory(id: string) {
+    return this.prisma.category.update({
+      where: { id },
+      data: { delFlag: 1, updatedDate: new Date() }
+    });
+  }
+
+  createBrand(body: AdminTaxonomyDto) {
+    return this.prisma.brand.create({
+      data: {
+        id: randomUUID(),
+        title: String(body.title ?? '').trim(),
+        slug: body.slug ? String(body.slug).trim() : null,
+        logo: body.logo ? String(body.logo).trim() : null,
+        delFlag: 0,
+        createdDate: new Date(),
+        updatedDate: new Date()
+      }
+    });
+  }
+
+  updateBrand(id: string, body: UpdateAdminTaxonomyDto) {
+    return this.prisma.brand.update({
+      where: { id },
+      data: {
+        ...(body.title !== undefined ? { title: String(body.title).trim() } : {}),
+        ...(body.slug !== undefined ? { slug: body.slug ? String(body.slug).trim() : null } : {}),
+        ...(body.logo !== undefined ? { logo: body.logo ? String(body.logo).trim() : null } : {}),
+        updatedDate: new Date()
+      }
+    });
+  }
+
+  softDeleteBrand(id: string) {
+    return this.prisma.brand.update({
+      where: { id },
+      data: { delFlag: 1, updatedDate: new Date() }
+    });
+  }
+
+  async createPolicy(body: AdminPolicyDto) {
+    const id = randomUUID();
+    const productIds = normalizeIds(body.productIds);
+
+    return this.prisma.$transaction(async (tx) => {
+      const policy = await tx.policy.create({
+        data: {
+          id,
+          packageName: String(body.packageName ?? '').trim(),
+          policies: normalizeJsonList(body.policies),
+          afterSales: normalizeJsonList(body.afterSales),
+          gifts: normalizeJsonList(body.gifts),
+          isActive: Number(body.isActive ?? 1),
+          delFlag: 0,
+          createdDate: new Date(),
+          updatedDate: new Date()
+        }
+      });
+
+      if (productIds.length) {
+        await tx.product.updateMany({
+          where: { id: { in: productIds }, delFlag: 0 },
+          data: { policyId: id, updatedDate: new Date() }
+        });
+      }
+
+      return policy;
+    });
+  }
+
+  async updatePolicy(id: string, body: UpdateAdminPolicyDto) {
+    const productIds = body.productIds !== undefined ? normalizeIds(body.productIds) : undefined;
+
+    return this.prisma.$transaction(async (tx) => {
+      const policy = await tx.policy.update({
+        where: { id },
+        data: {
+          ...(body.packageName !== undefined
+            ? { packageName: String(body.packageName).trim() }
+            : {}),
+          ...(body.policies !== undefined ? { policies: normalizeJsonList(body.policies) } : {}),
+          ...(body.afterSales !== undefined
+            ? { afterSales: normalizeJsonList(body.afterSales) }
+            : {}),
+          ...(body.gifts !== undefined ? { gifts: normalizeJsonList(body.gifts) } : {}),
+          ...(body.isActive !== undefined ? { isActive: Number(body.isActive) } : {}),
+          updatedDate: new Date()
+        }
+      });
+
+      if (productIds !== undefined) {
+        await tx.product.updateMany({
+          where: { policyId: id, id: { notIn: productIds }, delFlag: 0 },
+          data: { policyId: null, updatedDate: new Date() }
+        });
+        if (productIds.length) {
+          await tx.product.updateMany({
+            where: { id: { in: productIds }, delFlag: 0 },
+            data: { policyId: id, updatedDate: new Date() }
+          });
+        }
+      }
+
+      return policy;
+    });
+  }
+
+  async softDeletePolicy(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.product.updateMany({
+        where: { policyId: id, delFlag: 0 },
+        data: { policyId: null, updatedDate: new Date() }
+      });
+      return tx.policy.update({
+        where: { id },
+        data: { delFlag: 1, updatedDate: new Date() }
+      });
+    });
   }
 
   createBanner(body: AdminBannerDto) {
@@ -589,4 +754,10 @@ function normalizeImages(images?: string[]) {
 
 function normalizeIds(ids?: string[]) {
   return Array.from(new Set((ids ?? []).map((item) => String(item).trim()).filter(Boolean)));
+}
+
+function normalizeJsonList(items?: unknown[]) {
+  return (items ?? [])
+    .map((item) => String(item).trim())
+    .filter(Boolean) as Prisma.InputJsonValue;
 }

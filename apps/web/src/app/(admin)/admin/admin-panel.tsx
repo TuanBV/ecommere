@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { DashboardView } from './dashboard/dashboard-view';
+import { TaxonomyView } from './taxonomy/taxonomy-view';
 import { ProductsView } from './products/products-view';
 import { OrdersView } from './orders/orders-view';
 import { MediaView } from './media/media-view';
 import { NewsView } from './news/news-view';
+import { PoliciesView } from './policies/policies-view';
 import { ContactsView } from './contacts/contacts-view';
 import { UsersView } from './users/users-view';
 import { SettingsView } from './settings/settings-view';
@@ -24,13 +27,19 @@ export function AdminPanel({ view = 'dashboard' }: { view?: Tab }) {
 
   useEffect(() => {
     setToken(localStorage.getItem(tokenKey));
+
     const storedUser = localStorage.getItem(userKey);
-    if (storedUser) setUser(JSON.parse(storedUser) as SessionUser);
+    if (storedUser) {
+      setUser(JSON.parse(storedUser) as SessionUser);
+    }
+
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready && !token) router.replace('/admin/login');
+    if (ready && !token) {
+      router.replace('/admin/login');
+    }
   }, [ready, router, token]);
 
   function logout() {
@@ -42,44 +51,144 @@ export function AdminPanel({ view = 'dashboard' }: { view?: Tab }) {
     router.replace('/admin/login');
   }
 
-  if (!ready || !token) return <Notice>Đang chuyển tới trang đăng nhập...</Notice>;
-
-  if (view === 'products') {
-    return <ProductsView token={token} onUnauthorized={logout} />;
+  if (!ready || !token) {
+    return <Notice>Đang chuyển tới trang đăng nhập...</Notice>;
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1280px] px-4 py-6 lg:px-8">
-      <div className="mb-6 flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="text-sm text-gray-500">Quản trị hệ thống</div>
-          <h1 className="mt-1 text-2xl font-semibold text-gray-800">Admin Dashboard</h1>
-          <div className="mt-1 text-sm text-gray-500">
-            {user?.fullName ?? user?.username} · {roleLabel(user?.role)}
-          </div>
-        </div>
-        <button
-          onClick={logout}
-          className="h-10 rounded-lg bg-gray-900 px-4 text-sm font-semibold text-white"
-        >
-          Đăng xuất
-        </button>
-      </div>
+    <main className="min-h-screen w-full bg-[#f3f3f3]">
+      <AdminTopBar view={view} user={user} onLogout={logout} />
 
-      {view === 'dashboard' ? <DashboardView token={token} onUnauthorized={logout} /> : null}
-      {view === 'orders' ? <OrdersView token={token} onUnauthorized={logout} /> : null}
-      {view === 'banners' ? (
-        <MediaView token={token} onUnauthorized={logout} resource="banners" title="Banner" />
-      ) : null}
-      {view === 'sliders' ? (
-        <MediaView token={token} onUnauthorized={logout} resource="sliders" title="Slide" />
-      ) : null}
-      {view === 'news' ? <NewsView token={token} onUnauthorized={logout} /> : null}
-      {view === 'contacts' ? <ContactsView token={token} onUnauthorized={logout} /> : null}
-      {view === 'users' ? (
-        <UsersView token={token} onUnauthorized={logout} currentUserId={user?.id} />
-      ) : null}
-      {view === 'settings' ? <SettingsView token={token} onUnauthorized={logout} /> : null}
+      <div className="w-full px-5 py-6 lg:px-8">
+        {view === 'dashboard' ? <DashboardView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'products' ? <ProductsView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'categories' ? (
+          <TaxonomyView
+            token={token}
+            onUnauthorized={logout}
+            resource="categories"
+            title="Quản lý danh mục"
+            subtitle="Quản lý nhóm sản phẩm hiển thị trên website"
+          />
+        ) : null}
+
+        {view === 'brands' ? (
+          <TaxonomyView
+            token={token}
+            onUnauthorized={logout}
+            resource="brands"
+            title="Quản lý thương hiệu"
+            subtitle="Quản lý logo và tên thương hiệu sản phẩm"
+          />
+        ) : null}
+
+        {view === 'orders' ? <OrdersView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'banners' ? (
+          <MediaView token={token} onUnauthorized={logout} resource="banners" title="Banner" />
+        ) : null}
+
+        {view === 'sliders' ? (
+          <MediaView token={token} onUnauthorized={logout} resource="sliders" title="Slide" />
+        ) : null}
+
+        {view === 'news' ? <NewsView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'policies' ? <PoliciesView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'contacts' ? <ContactsView token={token} onUnauthorized={logout} /> : null}
+
+        {view === 'users' ? (
+          <UsersView token={token} onUnauthorized={logout} currentUserId={user?.id} />
+        ) : null}
+
+        {view === 'settings' ? <SettingsView token={token} onUnauthorized={logout} /> : null}
+      </div>
     </main>
   );
+}
+
+function AdminTopBar({
+  view,
+  user,
+  onLogout
+}: {
+  view: Tab;
+  user: SessionUser | null;
+  onLogout: () => void;
+}) {
+  const displayName = user?.fullName ?? user?.username ?? 'Admin';
+  const avatarText = displayName.charAt(0).toUpperCase();
+
+  return (
+    <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-100 bg-white px-5 shadow-sm lg:px-8">
+      <div className="min-w-0">
+        <h1 className="truncate text-xl font-semibold text-gray-900">{getPageTitle(view)}</h1>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="hidden text-right sm:block">
+          <div className="text-sm font-semibold text-gray-800">{displayName}</div>
+          <div className="text-xs font-medium text-gray-500">{roleLabel(user?.role)}</div>
+        </div>
+
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
+          {avatarText}
+        </div>
+
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-red-500 transition hover:bg-red-50"
+        >
+          <LogOut size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function getPageTitle(view: Tab) {
+  switch (view) {
+    case 'dashboard':
+      return 'Dashboard';
+
+    case 'products':
+      return 'Sản phẩm';
+
+    case 'categories':
+      return 'Danh mục';
+
+    case 'brands':
+      return 'Thương hiệu';
+
+    case 'orders':
+      return 'Đơn hàng';
+
+    case 'banners':
+      return 'Banner';
+
+    case 'sliders':
+      return 'Slider';
+
+    case 'news':
+      return 'Tin tức';
+
+    case 'policies':
+      return 'Chính sách';
+
+    case 'contacts':
+      return 'Liên hệ';
+
+    case 'users':
+      return 'User';
+
+    case 'settings':
+      return 'Cài đặt';
+
+    default:
+      return 'Dashboard';
+  }
 }

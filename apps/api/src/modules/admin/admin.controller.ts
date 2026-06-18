@@ -27,14 +27,18 @@ import {
   AdminContactStatusDto,
   AdminOrderStatusDto,
   AdminNewsDto,
+  AdminPolicyDto,
   AdminProductDto,
   AdminSettingDto,
   AdminSliderDto,
+  AdminTaxonomyDto,
   AdminUserDto,
   UpdateAdminBannerDto,
   UpdateAdminNewsDto,
+  UpdateAdminPolicyDto,
   UpdateAdminProductDto,
   UpdateAdminSliderDto,
+  UpdateAdminTaxonomyDto,
   UpdateAdminUserDto,
   UpdateAdminUserPasswordDto,
 } from './dto/admin.dto';
@@ -123,9 +127,39 @@ export class AdminController {
     return ok(await this.admin.table('category'));
   }
 
+  @Post('categories')
+  async createCategory(@Body() body: AdminTaxonomyDto) {
+    return ok(await this.admin.createCategory(body));
+  }
+
+  @Patch('categories/:id')
+  async updateCategory(@Param('id') id: string, @Body() body: UpdateAdminTaxonomyDto) {
+    return ok(await this.admin.updateCategory(id, body));
+  }
+
+  @Delete('categories/:id')
+  async deleteCategory(@Param('id') id: string) {
+    return ok(await this.admin.softDeleteCategory(id));
+  }
+
   @Get('brands')
   async brands() {
     return ok(await this.admin.table('brand'));
+  }
+
+  @Post('brands')
+  async createBrand(@Body() body: AdminTaxonomyDto) {
+    return ok(await this.admin.createBrand(body));
+  }
+
+  @Patch('brands/:id')
+  async updateBrand(@Param('id') id: string, @Body() body: UpdateAdminTaxonomyDto) {
+    return ok(await this.admin.updateBrand(id, body));
+  }
+
+  @Delete('brands/:id')
+  async deleteBrand(@Param('id') id: string) {
+    return ok(await this.admin.softDeleteBrand(id));
   }
 
   @Get('reviews')
@@ -193,6 +227,26 @@ export class AdminController {
     return ok(await this.admin.softDeleteNews(id));
   }
 
+  @Get('policies')
+  async policies() {
+    return ok(await this.admin.table('policy'));
+  }
+
+  @Post('policies')
+  async createPolicy(@Body() body: AdminPolicyDto) {
+    return ok(await this.admin.createPolicy(body));
+  }
+
+  @Patch('policies/:id')
+  async updatePolicy(@Param('id') id: string, @Body() body: UpdateAdminPolicyDto) {
+    return ok(await this.admin.updatePolicy(id, body));
+  }
+
+  @Delete('policies/:id')
+  async deletePolicy(@Param('id') id: string) {
+    return ok(await this.admin.softDeletePolicy(id));
+  }
+
   @Get('contacts')
   async contacts() {
     return ok(await this.admin.table('contact'));
@@ -250,7 +304,7 @@ export class AdminController {
 }
 
 function uploadType(value?: string) {
-  const allowed = new Set(['products', 'banners', 'sliders', 'news']);
+  const allowed = new Set(['products', 'banners', 'sliders', 'news', 'categories', 'brands']);
   if (!value || !allowed.has(value)) return 'products';
   return value;
 }

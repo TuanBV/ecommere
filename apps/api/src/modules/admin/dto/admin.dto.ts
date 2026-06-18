@@ -6,6 +6,7 @@ import {
   IsEmail,
   IsInt,
   IsOptional,
+  IsObject,
   IsString,
   Min
 } from 'class-validator';
@@ -182,6 +183,59 @@ export class AdminNewsDto {
 }
 
 export class UpdateAdminNewsDto extends PartialType(AdminNewsDto) {}
+
+export class AdminTaxonomyDto {
+  @IsString()
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  slug?: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  priority = 0;
+}
+
+export class UpdateAdminTaxonomyDto extends PartialType(AdminTaxonomyDto) {}
+
+export class AdminPolicyDto {
+  @IsString()
+  packageName!: string;
+
+  @IsOptional()
+  @IsArray()
+  policies?: string[];
+
+  @IsOptional()
+  @IsArray()
+  afterSales?: string[];
+
+  @IsOptional()
+  @IsArray()
+  gifts?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  productIds?: string[];
+
+  @IsOptional()
+  @IsObject()
+  raw?: Record<string, unknown>;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  isActive = 1;
+}
+
+export class UpdateAdminPolicyDto extends PartialType(AdminPolicyDto) {}
 
 export class AdminOrderStatusDto {
   @IsString()

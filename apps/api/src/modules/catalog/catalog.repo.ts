@@ -96,11 +96,53 @@ export class CatalogRepository {
     });
   }
 
-  findCategories() {
-    return this.prisma.category.findMany({ where: { delFlag: 0 }, orderBy: { priority: 'asc' } });
+  async findCategories() {
+    const productGroups = await this.prisma.product.groupBy({
+      by: ['categoryId', 'brandId'],
+      where: {
+        delFlag: 0,
+        status: 1,
+        category: { delFlag: 0 },
+        brand: { delFlag: 0 }
+      }
+    });
+    const categoryIds = [...new Set(productGroups.map((item) => item.categoryId))];
+    const brandIds = [...new Set(productGroups.map((item) => item.brandId))];
+
+    if (!categoryIds.length) return [];
+
+    const [categories, brands] = await this.prisma.$transaction([
+      this.prisma.category.findMany({
+        where: { id: { in: categoryIds }, delFlag: 0 },
+        orderBy: [{ priority: 'asc' }, { title: 'asc' }]
+      }),
+      this.prisma.brand.findMany({
+        where: { id: { in: brandIds }, delFlag: 0 },
+        orderBy: { title: 'asc' }
+      })
+    ]);
+    const brandById = new Map(brands.map((brand) => [brand.id, brand]));
+
+    return categories.map((category) => ({
+      ...category,
+      brands: productGroups
+        .filter((item) => item.categoryId === category.id)
+        .map((item) => brandById.get(item.brandId))
+        .filter((brand): brand is NonNullable<typeof brand> => Boolean(brand))
+    }));
   }
 
-  findBrands() {
-    return this.prisma.brand.findMany({ where: { delFlag: 0 }, orderBy: { title: 'asc' } });
+  async findBrands() {
+    const productGroups = await this.prisma.product.groupBy({
+      by: ['brandId'],
+      where: { delFlag: 0, status: 1, brand: { delFlag: 0 } }
+    });
+    const brandIds = productGroups.map((item) => item.brandId);
+    if (!brandIds.length) return [];
+
+    return this.prisma.brand.findMany({
+      where: { id: { in: brandIds }, delFlag: 0 },
+      orderBy: { title: 'asc' }
+    });
   }
 }

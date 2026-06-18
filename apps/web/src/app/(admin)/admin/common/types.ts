@@ -37,7 +37,25 @@ export type Setting = {
   description?: string | null;
 };
 
-export type OptionItem = { id: string; title: string };
+export type OptionItem = {
+  id: string;
+  title: string;
+  slug?: string | null;
+  logo?: string | null;
+  priority?: number | null;
+};
+
+export type AdminPolicy = {
+  id: string;
+  packageName: string;
+  policies?: string[] | null;
+  afterSales?: string[] | null;
+  gifts?: string[] | null;
+  isActive?: number | null;
+  products?: { id: string; title: string; sku?: string | null }[];
+  createdDate?: string | null;
+  updatedDate?: string | null;
+};
 
 export type AdminProduct = {
   id: string;
@@ -66,10 +84,25 @@ export type AdminOrder = {
   id: string;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string | null;
+  shippingAddress?: string | null;
+  note?: string | null;
+  paymentMethod?: string | null;
   totalAmount: string | number;
   status?: string | null;
   adminNote?: string | null;
   createdDate?: string | null;
+  details?: {
+    id: string;
+    productId: string;
+    quantity: number;
+    price: string | number;
+    product?: {
+      title?: string | null;
+      image?: string | null;
+      category?: { title?: string | null } | null;
+    } | null;
+  }[];
 };
 
 export type AdminContact = {
@@ -84,11 +117,14 @@ export type AdminContact = {
 
 export type Tab =
   | 'dashboard'
+  | 'categories'
+  | 'brands'
   | 'products'
   | 'orders'
   | 'banners'
   | 'sliders'
   | 'news'
+  | 'policies'
   | 'contacts'
   | 'users'
   | 'settings';
