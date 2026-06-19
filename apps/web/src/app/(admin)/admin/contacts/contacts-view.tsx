@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Edit3, Mail, Phone, Search, Trash2, X } from 'lucide-react';
 import { authRequest, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 import type { AdminContact } from '../common/types';
 
 type Toast = {
@@ -32,6 +33,8 @@ export function ContactsView({
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filteredItems = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -46,6 +49,14 @@ export function ContactsView({
       return matchesKeyword && matchesStatus;
     });
   }, [items, query, statusFilter]);
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter]);
 
   async function load() {
     try {
@@ -157,7 +168,7 @@ export function ContactsView({
           <div className="text-right">Thao tác</div>
         </div>
         <div className="divide-y divide-slate-100">
-          {filteredItems.map((item) => (
+          {pagedItems.map((item) => (
             <div
               key={item.id}
               className="grid grid-cols-[1fr_1.2fr_170px_130px_95px] items-center gap-4 px-5 py-4 text-sm"
@@ -207,6 +218,12 @@ export function ContactsView({
             </div>
           ) : null}
         </div>
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {editing ? (

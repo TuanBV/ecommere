@@ -76,7 +76,7 @@ export function SiteFooter() {
         </div>
 
         {/* Logo */}
-        <div className="mb-5 flex w-full items-center justify-start md:w-1/2 lg:w-1/4">
+        <div className="mb-5 flex w-full items-center justify-center md:justify-start md:w-1/2 lg:w-1/4">
           <Link href="/" aria-label="Green Home" className="flex h-10 items-center">
             <picture>
               <source type="image/webp" srcSet="/client/images/greenhome-logo-500.lossless.webp" />
@@ -93,7 +93,7 @@ export function SiteFooter() {
         </div>
 
         {/* Footer columns */}
-        <div className="grid grid-cols-1 gap-5 text-left sm:grid-cols-2 md:gap-12 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 text-center sm:text-left sm:grid-cols-2 md:gap-12 lg:grid-cols-3">
           <div className="space-y-3 text-base leading-relaxed text-gray-700">
             <FooterPhone title="Tư vấn mua hàng" />
             <FooterPhone title="Hỗ trợ kỹ thuật" />
@@ -112,7 +112,7 @@ export function SiteFooter() {
             ]}
           />
 
-          <div>
+          <div className="flex flex-col items-center justify-center sm:items-start">
             <h3 className="mb-6 text-base font-semibold uppercase tracking-wider text-gray-700">
               Về chúng tôi
             </h3>
@@ -135,7 +135,7 @@ export function SiteFooter() {
               </li>
             </ul>
 
-            <div className="space-y-3 pt-3">
+            <div className="space-y-3 pt-3 flex flex-col items-center sm:items-start">
               <p className="font-semibold uppercase text-gray-700 md:text-base">
                 Công ty TNHH Thương mại và Công nghệ GHD
               </p>
@@ -274,7 +274,7 @@ function FooterPhone({ title }: { title: string }) {
 
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
   return (
-    <div>
+    <div className="flex flex-col items-center sm:items-start">
       <h3 className="mb-6 text-base font-semibold uppercase tracking-wider text-gray-700">
         {title}
       </h3>

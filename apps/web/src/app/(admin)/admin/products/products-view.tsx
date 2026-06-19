@@ -19,6 +19,7 @@ import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 're
 import 'suneditor/dist/css/suneditor.min.css';
 import { mediaUrl, money } from '@/lib/api';
 import { authRequest, authUpload, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 import type { AdminPolicy, AdminProduct, OptionItem } from '../common/types';
 
 const SunEditor = dynamic(() => import('suneditor-react'), { ssr: false });
@@ -102,6 +103,8 @@ export function ProductsView({
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -121,6 +124,15 @@ export function ProductsView({
       return matchesKeyword && matchesCategory && matchesBrand;
     });
   }, [brandFilter, categoryFilter, items, query]);
+
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [brandFilter, categoryFilter, query]);
 
   async function load() {
     setLoading(true);
@@ -397,7 +409,10 @@ export function ProductsView({
           brands={brands}
           categoryFilter={categoryFilter}
           categories={categories}
-          items={filteredItems}
+          items={pagedItems}
+          page={page}
+          pageSize={pageSize}
+          totalItems={filteredItems.length}
           loading={loading}
           query={query}
           onBrandChange={setBrandFilter}
@@ -408,6 +423,7 @@ export function ProductsView({
           onEdit={openEdit}
           onExport={exportCsv}
           onQueryChange={setQuery}
+          onPageChange={setPage}
           onRefresh={() => void load()}
         />
       ) : (
@@ -435,6 +451,9 @@ export function ProductsView({
 
 function ProductList({
   items,
+  page,
+  pageSize,
+  totalItems,
   categories,
   brands,
   query,
@@ -442,6 +461,7 @@ function ProductList({
   brandFilter,
   loading,
   onQueryChange,
+  onPageChange,
   onCategoryChange,
   onBrandChange,
   onRefresh,
@@ -452,6 +472,9 @@ function ProductList({
   onDelete
 }: {
   items: ProductRow[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
   categories: OptionItem[];
   brands: OptionItem[];
   query: string;
@@ -459,6 +482,7 @@ function ProductList({
   brandFilter: string;
   loading: boolean;
   onQueryChange: (value: string) => void;
+  onPageChange: (page: number) => void;
   onCategoryChange: (value: string) => void;
   onBrandChange: (value: string) => void;
   onRefresh: () => void;
@@ -624,6 +648,12 @@ function ProductList({
             </div>
           )}
         </div>
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={totalItems}
+          onPageChange={onPageChange}
+        />
       </div>
     </div>
   );

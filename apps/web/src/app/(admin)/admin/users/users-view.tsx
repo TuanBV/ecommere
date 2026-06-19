@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Edit3, Plus, Search, Trash2, UserCog, X } from 'lucide-react';
 import { authRequest, handleError } from '../common/api';
 import { roleLabel } from '../common/session';
+import { AdminPagination } from '../common/ui';
 import type { AdminUser } from '../common/types';
 
 type UserForm = {
@@ -47,6 +48,8 @@ export function UsersView({
   const [roleFilter, setRoleFilter] = useState('');
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filteredUsers = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -61,6 +64,14 @@ export function UsersView({
       return matchesKeyword && matchesRole;
     });
   }, [query, roleFilter, users]);
+  const pagedUsers = useMemo(
+    () => filteredUsers.slice((page - 1) * pageSize, page * pageSize),
+    [filteredUsers, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, roleFilter]);
 
   async function load() {
     try {
@@ -221,7 +232,7 @@ export function UsersView({
           <div className="text-right">Hành động</div>
         </div>
         <div className="divide-y divide-slate-100">
-          {filteredUsers.map((user) => (
+          {pagedUsers.map((user) => (
             <div
               key={user.id}
               className="grid grid-cols-[1.2fr_1.2fr_160px_120px_110px] items-center gap-4 px-5 py-4 text-sm"
@@ -274,6 +285,12 @@ export function UsersView({
             </div>
           ) : null}
         </div>
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredUsers.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {modalOpen ? (

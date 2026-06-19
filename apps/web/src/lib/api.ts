@@ -16,6 +16,13 @@ export type Product = {
   brand?: { title: string; slug: string | null };
 };
 
+export type ApiMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${serverApiBaseUrl}${path}`, {
     next: { revalidate: 60 }
@@ -23,6 +30,17 @@ export async function apiGet<T>(path: string): Promise<T> {
   if (!res.ok) throw new Error(`API error ${res.status}`);
   const json = (await res.json()) as { data: T };
   return json.data;
+}
+
+export async function apiGetWithMeta<T>(
+  path: string
+): Promise<{ data: T; meta?: Partial<ApiMeta> }> {
+  const res = await fetch(`${serverApiBaseUrl}${path}`, {
+    next: { revalidate: 60 }
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  const json = (await res.json()) as { data: T; meta?: Partial<ApiMeta> };
+  return { data: json.data, meta: json.meta };
 }
 
 export function mediaUrl(path?: string | null) {

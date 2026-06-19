@@ -73,7 +73,7 @@ export class CatalogRepository {
     const variants = product.groupId
       ? await this.prisma.product.findMany({
           where: { groupId: product.groupId, delFlag: 0, status: 1 },
-          select: { id: true, slug: true, color: true, size: true, variantName: true, stockQty: true }
+          select: { id: true, slug: true, color: true, size: true, variantName: true, stockQty: true, salePrice: true, price: true }
         })
       : [];
     const related = await this.prisma.product.findMany({

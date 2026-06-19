@@ -1,5 +1,6 @@
 import { ProductCard } from '@/components/product-card';
-import { Product, apiGet } from '@/lib/api';
+import { Pagination } from '@/components/pagination';
+import { Product, apiGet, apiGetWithMeta } from '@/lib/api';
 import { ProductListControls } from './product-list-controls';
 
 type CategoryBrand = {
@@ -23,51 +24,56 @@ export default async function ProductsPage({
   const params = await searchParams;
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);
+  if (!query.has('limit')) query.set('limit', '12');
 
-  const [products, categories] = await Promise.all([
-    apiGet<Product[]>(`/products?${query.toString()}`).catch(() => []),
+  const [productResult, categories] = await Promise.all([
+    apiGetWithMeta<Product[]>(`/products?${query.toString()}`).catch(() => ({
+      data: [],
+      meta: { page: 1, limit: 12, total: 0, totalPages: 1 }
+    })),
     apiGet<Category[]>('/categories').catch(() => [])
   ]);
+  const products = productResult.data;
 
   return (
     <main className="container py-8">
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
-        <h1 className="mt-2 text-3xl font-semibold text-gray-800 md:text-4xl">Sản phẩm</h1>
+        <h1 className="text-3xl font-semibold text-gray-800 md:text-4xl">Sản phẩm</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        <ProductListControls
-          categories={categories}
-          values={{
-            q: params.q ?? '',
-            category: params.category ?? '',
-            brand: params.brand ?? '',
-            minPrice: params.minPrice ?? '',
-            maxPrice: params.maxPrice ?? '',
-            sort: params.sort ?? 'newest',
-            inStock: params.inStock ?? ''
-          }}
-        />
+      <ProductListControls
+        categories={categories}
+        values={{
+          q: params.q ?? '',
+          category: params.category ?? '',
+          brand: params.brand ?? '',
+          minPrice: params.minPrice ?? '',
+          maxPrice: params.maxPrice ?? '',
+          sort: params.sort ?? 'newest',
+          inStock: params.inStock ?? ''
+        }}
+      />
 
-        <section>
-          <div className="mb-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
-            <span className="font-semibold text-gray-700">Danh sách sản phẩm</span>
-            <span className="text-base text-gray-600">{products.length} sản phẩm</span>
+      <section>
+        <div className="mb-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm">
+          <span className="font-semibold text-gray-700">Danh sách sản phẩm</span>
+          <span className="text-base text-gray-600">{products.length} sản phẩm</span>
+        </div>
+
+        {products.length ? (
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-5">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
+        ) : (
+          <div className="rounded-2xl bg-white px-5 py-12 text-center text-sm font-semibold text-gray-500 shadow-sm">
+            Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.
+          </div>
+        )}
 
-          {products.length ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-white px-5 py-12 text-center text-sm font-semibold text-gray-500 shadow-sm">
-              Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.
-            </div>
-          )}
-        </section>
-      </div>
+        <Pagination meta={productResult.meta} basePath="/products" params={params} />
+      </section>
     </main>
   );
 }

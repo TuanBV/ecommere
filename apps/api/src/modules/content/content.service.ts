@@ -15,8 +15,8 @@ export class ContentService {
     return this.contentRepository.sliders();
   }
 
-  news() {
-    return this.contentRepository.news();
+  news(query: { page?: number; limit?: number; q?: string }) {
+    return this.contentRepository.news(query);
   }
 
   newsDetail(slug: string) {

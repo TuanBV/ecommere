@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { FileText, Package, RefreshCw, Search, X } from 'lucide-react';
 import { mediaUrl, money } from '@/lib/api';
 import { authRequest, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 import type { AdminOrder } from '../common/types';
 
 const statuses = ['PENDING', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED'];
@@ -22,6 +23,8 @@ export function OrdersView({
   const [status, setStatus] = useState('');
   const [adminNote, setAdminNote] = useState('');
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filteredItems = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -36,6 +39,14 @@ export function OrdersView({
       return matchesQuery && matchesPhone && matchesStatus;
     });
   }, [items, phone, query, status]);
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [phone, query, status]);
 
   async function load() {
     try {
@@ -157,7 +168,7 @@ export function OrdersView({
           <div>Trạng thái</div>
           <div className="text-right">Thao tác</div>
         </div>
-        {filteredItems.map((item) => (
+        {pagedItems.map((item) => (
           <div
             key={item.id}
             className="grid grid-cols-[190px_1fr_180px_180px_160px_120px] items-center border-t border-slate-100 px-5 py-4 text-sm"
@@ -187,6 +198,12 @@ export function OrdersView({
             </div>
           </div>
         ))}
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </section>
 
       {selected ? (

@@ -148,3 +148,74 @@ export function Notice({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+export function AdminPagination({
+  page,
+  pageSize,
+  total,
+  onPageChange
+}: {
+  page: number;
+  pageSize: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}) {
+  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4 text-sm font-bold text-slate-600">
+      <div>
+        Hiển thị {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} / {total}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+          className="h-9 rounded-lg bg-slate-100 px-3 disabled:opacity-40"
+        >
+          Trước
+        </button>
+        {pageWindow(page, totalPages).map((item, index) =>
+          item === '...' ? (
+            <span key={`${item}-${index}`} className="px-2 text-slate-400">
+              ...
+            </span>
+          ) : (
+            <button
+              key={item}
+              type="button"
+              onClick={() => onPageChange(item)}
+              className={`h-9 min-w-9 rounded-lg px-3 ${
+                item === page ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+              }`}
+            >
+              {item}
+            </button>
+          )
+        )}
+        <button
+          type="button"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+          className="h-9 rounded-lg bg-slate-100 px-3 disabled:opacity-40"
+        >
+          Sau
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function pageWindow(current: number, total: number) {
+  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+  const pages: Array<number | '...'> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) pages.push('...');
+  for (let page = start; page <= end; page += 1) pages.push(page);
+  if (end < total - 1) pages.push('...');
+  pages.push(total);
+  return pages;
+}

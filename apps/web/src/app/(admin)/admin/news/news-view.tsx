@@ -18,7 +18,7 @@ import 'suneditor/dist/css/suneditor.min.css';
 import { mediaUrl } from '@/lib/api';
 import { authRequest, authUpload, handleError } from '../common/api';
 import type { OptionItem } from '../common/types';
-import { Field, SelectField, TextareaField } from '../common/ui';
+import { AdminPagination, Field, SelectField, TextareaField } from '../common/ui';
 
 const SunEditor = dynamic(() => import('suneditor-react'), { ssr: false });
 
@@ -32,6 +32,8 @@ export function NewsView({ token, onUnauthorized }: { token: string; onUnauthori
   const [formOpen, setFormOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const value = editing ?? {};
@@ -41,6 +43,11 @@ export function NewsView({ token, onUnauthorized }: { token: string; onUnauthori
     const status = String(item.status ?? '');
     return (!keyword || title.includes(keyword)) && (!statusFilter || status === statusFilter);
   });
+  const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter]);
 
   useEffect(() => {
     setThumbnail(String(value.thumbnail ?? ''));
@@ -294,7 +301,7 @@ export function NewsView({ token, onUnauthorized }: { token: string; onUnauthori
           <div>Trạng thái</div>
           <div className="text-right">Thao tác</div>
         </div>
-        {filteredItems.map((item) => (
+        {pagedItems.map((item) => (
           <div
             key={String(item.id)}
             className="grid grid-cols-[minmax(420px,1fr)_170px_170px_130px_130px] items-center border-t border-slate-100 px-6 py-4 text-sm"
@@ -344,6 +351,12 @@ export function NewsView({ token, onUnauthorized }: { token: string; onUnauthori
             </div>
           </div>
         ))}
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </section>
     </div>
   );

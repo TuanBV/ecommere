@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Edit3, ImagePlus, Images, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
 import { mediaUrl } from '@/lib/api';
 import { authRequest, authUpload, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 
 type MediaItem = {
   id: string;
@@ -59,6 +60,8 @@ export function MediaView({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const isSlider = resource === 'sliders';
   const pageTitle = isSlider ? 'Quản lý Slider' : 'Quản lý Banner';
@@ -79,6 +82,14 @@ export function MediaView({
       return matchesKeyword && matchesStatus;
     });
   }, [items, query, statusFilter]);
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter]);
 
   async function load() {
     try {
@@ -250,7 +261,7 @@ export function MediaView({
           <div className="text-right">Thao tác</div>
         </div>
         <div className="divide-y divide-slate-100">
-          {filteredItems.map((item) => (
+          {pagedItems.map((item) => (
             <div
               key={item.id}
               className="grid grid-cols-[1.4fr_1fr_150px_130px_100px] items-center gap-4 px-5 py-4 text-sm"
@@ -317,6 +328,12 @@ export function MediaView({
             </div>
           ) : null}
         </div>
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </div>
 
       {modalOpen ? (

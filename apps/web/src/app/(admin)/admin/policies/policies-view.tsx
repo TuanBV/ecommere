@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Box, Edit3, Gift, Plus, Search, ShieldCheck, Trash2, Wrench, X } from 'lucide-react';
 import { authRequest, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 import type { AdminPolicy, AdminProduct } from '../common/types';
 
 type ProductLite = Pick<AdminProduct, 'id' | 'title' | 'sku' | 'policyId'>;
@@ -45,12 +46,22 @@ export function PoliciesView({
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filteredItems = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) return items;
     return items.filter((item) => item.packageName.toLowerCase().includes(keyword));
   }, [items, query]);
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   const selectedProducts = form.productIds
     .map((id) => products.find((product) => product.id === id))
@@ -259,7 +270,7 @@ export function PoliciesView({
           <div>Quà tặng</div>
           <div className="text-right">Hành động</div>
         </div>
-        {filteredItems.map((item) => (
+        {pagedItems.map((item) => (
           <div
             key={item.id}
             className="grid grid-cols-[1fr_1fr_1.2fr_1.2fr_110px] gap-4 border-t border-slate-100 px-6 py-5 text-sm"
@@ -288,6 +299,12 @@ export function PoliciesView({
             </div>
           </div>
         ))}
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </section>
 
       {modalOpen ? (

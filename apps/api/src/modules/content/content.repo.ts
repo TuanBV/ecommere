@@ -22,12 +22,36 @@ export class ContentRepository {
     });
   }
 
-  news() {
-    return this.prisma.news.findMany({
-      where: { delFlag: 0, status: 'PUBLISHED' },
-      orderBy: { createdDate: 'desc' },
-      include: { category: true, brand: true }
-    });
+  async news(query: { page?: number; limit?: number; q?: string }) {
+    const page = Math.max(Number(query.page ?? 1), 1);
+    const limit = Math.min(Math.max(Number(query.limit ?? 9), 1), 30);
+    const keyword = query.q?.trim();
+    const where = {
+      delFlag: 0,
+      status: 'PUBLISHED',
+      ...(keyword
+        ? {
+            OR: [
+              { title: { contains: keyword } },
+              { summary: { contains: keyword } },
+              { slug: { contains: keyword } }
+            ]
+          }
+        : {})
+    };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.news.findMany({
+        where,
+        orderBy: { createdDate: 'desc' },
+        include: { category: true, brand: true },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      this.prisma.news.count({ where })
+    ]);
+
+    return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
   async newsDetail(slug: string) {

@@ -21,8 +21,13 @@ export class ContentController {
   }
 
   @Get('news')
-  async news() {
-    return ok(await this.content.news());
+  async news(@Query('page') page?: string, @Query('limit') limit?: string, @Query('q') q?: string) {
+    const result = await this.content.news({
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      q
+    });
+    return ok(result.items, result.meta);
   }
 
   @Get('news/:slug')
