@@ -54,13 +54,14 @@ export default async function HomePage() {
   const categories = categoriesRaw.length ? categoriesRaw : fallbackCategories;
   const products = productsRaw.length ? productsRaw : fallbackProducts;
   const brands = brandsRaw.length ? brandsRaw : fallbackBrands;
+  const brandSlides = [...brands, ...brands];
 
   return (
     <main className="pb-12">
       <div className="container">
         <section className="grid gap-3 md:grid-cols-[1fr_1fr]">
           <Link
-            href={sliders[0].linkUrl ?? '/products'}
+            href={sliders[0].linkUrl ?? '/san-pham'}
             className="relative block aspect-[568/320] overflow-hidden rounded-lg bg-white shadow-sm"
           >
             <ResponsiveImage
@@ -75,7 +76,7 @@ export default async function HomePage() {
             {banners.slice(0, 2).map((b, i) => (
               <Link
                 key={b.id}
-                href={b.linkUrl ?? '/products'}
+                href={b.linkUrl ?? '/san-pham'}
                 className="relative block aspect-[568/154] overflow-hidden rounded-lg bg-white shadow-sm"
               >
                 <ResponsiveImage
@@ -125,7 +126,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 text-center">
             <Link
-              href="/products"
+              href="/san-pham"
               className="inline-flex items-center rounded-lg border border-[#1769ff] px-6 py-3 text-sm font-semibold uppercase text-[#1769ff] hover:bg-[#1769ff] hover:text-white"
             >
               Xem tất cả sản phẩm →
@@ -133,26 +134,29 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="mt-16">
+        <section className="mt-16 overflow-hidden">
           <SectionTitle title="Thương hiệu đồng hành" />
-          <div className="grid grid-cols-2 items-center gap-3 rounded-lg bg-white px-8 py-7 shadow-sm md:grid-cols-5">
-            {brands.slice(0, 5).map((b) => (
-              <Link
-                key={b.id}
-                href={`/products?brand=${b.slug ?? ''}`}
-                className="flex h-12 items-center justify-center text-center text-3xl font-semibold uppercase tracking-wider text-gray-500"
-              >
-                {b.logo ? (
-                  <img
-                    src={mediaUrl(b.logo)}
-                    alt={b.title}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                ) : (
-                  b.title
-                )}
-              </Link>
-            ))}
+          <div className="relative overflow-hidden rounded-lg bg-white py-7 shadow-sm">
+            <div className="flex w-max animate-infinite-scroll items-center gap-3 px-4 hover:[animation-play-state:paused]">
+              {brandSlides.map((b, index) => (
+                <Link
+                  key={`${b.id}-${index}`}
+                  href={`/san-pham?thuong-hieu=${b.slug ?? ''}`}
+                  className="flex h-16 w-40 shrink-0 items-center justify-center rounded-lg px-4 text-center text-2xl font-semibold uppercase text-gray-500 transition hover:bg-blue-50 hover:text-[#1769ff] md:w-48"
+                  aria-label={`Xem sản phẩm thương hiệu ${b.title}`}
+                >
+                  {b.logo ? (
+                    <img
+                      src={mediaUrl(b.logo)}
+                      alt={b.title}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    <span className="line-clamp-2 break-words leading-tight">{b.title}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -172,7 +176,7 @@ function ClockIcon() {
 function CategoryTile({ category }: { category: Category }) {
   return (
     <Link
-      href={`/products?category=${category.slug ?? ''}`}
+      href={`/san-pham?danh-muc=${category.slug ?? ''}`}
       className="group flex flex-col items-center gap-3"
     >
       <div className="flex aspect-square w-full items-center justify-center rounded-lg bg-white p-5 shadow-sm transition group-hover:-translate-y-1 group-hover:shadow-md">
@@ -216,7 +220,7 @@ function ProductStrip({
   return (
     <section className="mt-10 grid gap-5 md:grid-cols-[220px_1fr]">
       <Link
-        href="/products"
+        href="/san-pham"
         className="relative hidden min-h-[280px] overflow-hidden rounded-lg bg-white shadow-sm md:block"
       >
         <img src={sideImage} alt={title} className="h-full w-full object-cover" />
@@ -224,7 +228,7 @@ function ProductStrip({
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
-          <Link href="/products" className="text-sm font-semibold text-[#1769ff]">
+          <Link href="/san-pham" className="text-sm font-semibold text-[#1769ff]">
             Xem thêm →
           </Link>
         </div>
@@ -326,7 +330,7 @@ const fallbackSlides = [
     id: 's1',
     title: 'Xiaomi TV A Series 2026',
     imageUrl: '/client/images/slider-1.jpg',
-    linkUrl: '/products'
+    linkUrl: '/san-pham'
   }
 ];
 const fallbackBanners = [
@@ -334,13 +338,13 @@ const fallbackBanners = [
     id: 'b1',
     title: 'Robot hút bụi',
     imageUrl: '/client/images/banner-1.jpg',
-    linkUrl: '/products'
+    linkUrl: '/san-pham'
   },
   {
     id: 'b2',
     title: 'Máy lọc không khí',
     imageUrl: '/client/images/banner-2.jpg',
-    linkUrl: '/products'
+    linkUrl: '/san-pham'
   }
 ];
 const fallbackCategories: Category[] = [

@@ -14,7 +14,7 @@ export function ProductCard({ product }: { product: Product }) {
   const disabled = product.stockQty <= 0;
 
   return (
-    <article className="group relative overflow-hidden rounded-xl bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       {discount ? (
         <div className="absolute left-2 top-2 z-10 rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
           -{discount}%
@@ -22,7 +22,7 @@ export function ProductCard({ product }: { product: Product }) {
       ) : null}
 
       <Link
-        href={`/products/${product.slug ?? product.id}`}
+        href={`/san-pham/${product.slug ?? product.id}`}
         className="relative block aspect-[1.12] bg-white p-3"
       >
         <ResponsiveImage
@@ -33,19 +33,19 @@ export function ProductCard({ product }: { product: Product }) {
         />
       </Link>
 
-      <div className="px-3 pb-3">
+      <div className="flex flex-1 flex-col px-3 pb-3">
         <div className="mb-1 text-xs font-semibold uppercase text-[#1769ff]">
           {product.brand?.title ?? product.category?.title ?? 'GREENHOME'}
         </div>
 
         <Link
-          href={`/products/${product.slug ?? product.id}`}
+          href={`/san-pham/${product.slug ?? product.id}`}
           className="line-clamp-2 min-h-[44px] text-sm font-semibold leading-5 text-[#334155] hover:text-[#1769ff] md:text-[15px] md:leading-6"
         >
           {product.title}
         </Link>
 
-        <div className="mt-3 text-center">
+        <div className="mt-3 min-h-[52px] text-center">
           <div className="text-lg font-semibold text-red-600 md:text-xl">{money(sale)}</div>
           {price > sale ? (
             <div className="text-sm text-gray-500 line-through">{money(price)}</div>
@@ -55,7 +55,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           disabled={disabled}
-          className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#263449] text-sm font-semibold text-white transition hover:bg-[#1769ff] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#263449] text-sm font-semibold text-white transition hover:bg-[#1769ff] disabled:cursor-not-allowed disabled:bg-gray-300"
           onClick={() =>
             add({
               productId: product.id,

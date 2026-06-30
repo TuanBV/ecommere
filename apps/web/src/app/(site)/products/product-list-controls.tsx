@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Search } from 'lucide-react';
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 
 type CategoryBrand = {
   id: string;
@@ -34,8 +34,23 @@ export function ProductListControls({
   categories: Category[];
   values: FilterValues;
 }) {
+  const [formValues, setFormValues] = useState(values);
   const [selectedCategory, setSelectedCategory] = useState(values.category);
   const [selectedBrand, setSelectedBrand] = useState(values.brand);
+
+  useEffect(() => {
+    setFormValues(values);
+    setSelectedCategory(values.category);
+    setSelectedBrand(values.brand);
+  }, [
+    values.q,
+    values.category,
+    values.brand,
+    values.minPrice,
+    values.maxPrice,
+    values.sort,
+    values.inStock
+  ]);
   const hasAnyFilter = useMemo(
     () =>
       Boolean(
@@ -69,7 +84,7 @@ export function ProductListControls({
     const formData = new FormData(event.currentTarget);
     const params = new URLSearchParams();
 
-    for (const key of ['q', 'category', 'brand', 'minPrice', 'maxPrice', 'sort']) {
+    for (const key of ['q', 'danh-muc', 'thuong-hieu', 'minPrice', 'maxPrice', 'sort']) {
       const value = String(formData.get(key) ?? '').trim();
       if (!value) continue;
       if (key === 'sort' && value === 'newest') continue;
@@ -79,7 +94,7 @@ export function ProductListControls({
     if (formData.get('inStock') === 'true') params.set('inStock', 'true');
 
     const query = params.toString();
-    window.location.href = query ? `/products?${query}` : '/products';
+    window.location.href = query ? `/san-pham?${query}` : '/san-pham';
   }
 
   return (
@@ -94,7 +109,10 @@ export function ProductListControls({
             <div className="relative">
               <input
                 name="q"
-                defaultValue={values.q}
+                value={formValues.q}
+                onChange={(event) =>
+                  setFormValues((current) => ({ ...current, q: event.target.value }))
+                }
                 placeholder="Tên sản phẩm..."
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 pr-10 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -108,10 +126,12 @@ export function ProductListControls({
           <label className="grid gap-2">
             <span className="text-xs font-bold uppercase text-gray-700">Danh mục</span>
             <select
-              name="category"
+              name="danh-muc"
               value={selectedCategory}
               onChange={(event) => {
-                setSelectedCategory(event.target.value);
+                const category = event.target.value;
+                setFormValues((current) => ({ ...current, category, brand: '' }));
+                setSelectedCategory(category);
                 setSelectedBrand('');
               }}
               className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
@@ -128,9 +148,12 @@ export function ProductListControls({
           <label className="grid gap-2">
             <span className="text-xs font-bold uppercase text-gray-700">Thương hiệu</span>
             <select
-              name="brand"
+              name="thuong-hieu"
               value={selectedBrand}
-              onChange={(event) => setSelectedBrand(event.target.value)}
+              onChange={(event) => {
+                setFormValues((current) => ({ ...current, brand: event.target.value }));
+                setSelectedBrand(event.target.value);
+              }}
               className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
               <option value="">Tất cả thương hiệu</option>
@@ -149,7 +172,10 @@ export function ProductListControls({
                 name="minPrice"
                 type="number"
                 min="0"
-                defaultValue={values.minPrice}
+                value={formValues.minPrice}
+                onChange={(event) =>
+                  setFormValues((current) => ({ ...current, minPrice: event.target.value }))
+                }
                 placeholder="Từ"
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -158,7 +184,10 @@ export function ProductListControls({
                 name="maxPrice"
                 type="number"
                 min="0"
-                defaultValue={values.maxPrice}
+                value={formValues.maxPrice}
+                onChange={(event) =>
+                  setFormValues((current) => ({ ...current, maxPrice: event.target.value }))
+                }
                 placeholder="Đến"
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -170,7 +199,7 @@ export function ProductListControls({
           </button>
 
           <Link
-            href="/products"
+            href="/san-pham"
             className={[
               'grid h-12 min-w-32 place-items-center rounded-xl bg-rose-50 px-8 text-sm font-bold uppercase text-rose-400 transition hover:bg-rose-100',
               hasAnyFilter ? '' : 'pointer-events-none opacity-60'
@@ -185,7 +214,10 @@ export function ProductListControls({
             <span className="text-xs font-bold uppercase text-gray-700">Sắp xếp</span>
             <select
               name="sort"
-              defaultValue={values.sort || 'newest'}
+              value={formValues.sort || 'newest'}
+              onChange={(event) =>
+                setFormValues((current) => ({ ...current, sort: event.target.value }))
+              }
               className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
               <option value="newest">Mới nhất</option>
@@ -200,7 +232,13 @@ export function ProductListControls({
               type="checkbox"
               name="inStock"
               value="true"
-              defaultChecked={values.inStock === 'true'}
+              checked={formValues.inStock === 'true'}
+              onChange={(event) =>
+                setFormValues((current) => ({
+                  ...current,
+                  inStock: event.target.checked ? 'true' : ''
+                }))
+              }
               className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600"
             />
             <span>Chỉ hiển thị sản phẩm còn hàng</span>

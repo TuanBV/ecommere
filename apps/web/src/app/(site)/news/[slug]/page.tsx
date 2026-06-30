@@ -20,13 +20,13 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
   if (!item) notFound();
 
   return (
-    <main className="container py-8">
+    <main className="container pb-8">
       <article className="overflow-hidden rounded-2xl bg-white shadow-sm">
         {item.thumbnail ? (
           <img src={mediaUrl(item.thumbnail)} alt={item.title} className="w-full object-cover" />
         ) : null}
         <div className="p-6 md:p-8">
-          <Link href="/news" className="text-sm font-bold text-blue-600">
+          <Link href="/tin-tuc" className="text-sm font-bold text-blue-600">
             Tin tức
           </Link>
           <h1 className="mt-3 text-3xl font-bold leading-tight text-gray-900 md:text-4xl">

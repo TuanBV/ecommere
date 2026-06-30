@@ -79,8 +79,8 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
 
   function syncActiveFiltersFromLocation() {
     const params = new URLSearchParams(window.location.search);
-    setActiveCategorySlug(params.get('category') ?? '');
-    setActiveBrandSlug(params.get('brand') ?? '');
+    setActiveCategorySlug(params.get('danh-muc') ?? params.get('category') ?? '');
+    setActiveBrandSlug(params.get('thuong-hieu') ?? params.get('brand') ?? '');
   }
 
   useEffect(() => {
@@ -217,7 +217,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             </MobileMenuLink>
 
             <MobileMenuLink
-              href="/products"
+              href="/san-pham"
               icon={<Package size={22} fill="currentColor" />}
               onClick={() => setOpen(false)}
             >
@@ -225,7 +225,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             </MobileMenuLink>
 
             <MobileMenuLink
-              href="/news"
+              href="/tin-tuc"
               icon={<Newspaper size={22} />}
               onClick={() => setOpen(false)}
             >
@@ -243,7 +243,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                 <div key={cat.id} className="rounded-xl">
                   <div className="flex items-center rounded-xl transition-all hover:bg-blue-50">
                     <Link
-                      href={`/products?category=${cat.slug ?? ''}`}
+                      href={`/san-pham?danh-muc=${cat.slug ?? ''}`}
                       onClick={() => setOpen(false)}
                       className="flex min-w-0 flex-1 items-center p-3"
                     >
@@ -276,7 +276,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                       {cat.brands.map((brand) => (
                         <Link
                           key={brand.id}
-                          href={`/products?category=${cat.slug ?? ''}&brand=${brand.slug ?? ''}`}
+                          href={`/san-pham?danh-muc=${cat.slug ?? ''}&thuong-hieu=${brand.slug ?? ''}`}
                           onClick={() => setOpen(false)}
                           className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-blue-50 hover:text-blue-700"
                         >
@@ -335,7 +335,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             </div>
 
             <form
-              action="/products"
+              action="/san-pham"
               className="order-3 w-full lg:order-2 lg:mx-10 lg:max-w-2xl lg:flex-1"
             >
               <div className="relative h-[46px] min-h-[46px]">
@@ -402,7 +402,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                 {menuCategories.map((cat) => (
                   <div key={cat.id} className="relative flex h-full items-center">
                     <Link
-                      href={`/products?category=${cat.slug ?? ''}`}
+                      href={`/san-pham?danh-muc=${cat.slug ?? ''}`}
                       className="flex h-[48px] items-center px-4 pr-2 leading-none text-gray-600 hover:text-blue-900"
                     >
                       {cat.title}

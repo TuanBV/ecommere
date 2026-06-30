@@ -22,8 +22,22 @@ export default async function ProductsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
+  const category = params['danh-muc'] ?? params.category ?? '';
+  const brand = params['thuong-hieu'] ?? params.brand ?? '';
+  const publicParams = {
+    ...params,
+    category: undefined,
+    brand: undefined,
+    'danh-muc': category || undefined,
+    'thuong-hieu': brand || undefined
+  };
   const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) if (value) query.set(key, value);
+  for (const [key, value] of Object.entries(params)) {
+    if (!value || ['danh-muc', 'thuong-hieu', 'category', 'brand'].includes(key)) continue;
+    query.set(key, value);
+  }
+  if (category) query.set('category', category);
+  if (brand) query.set('brand', brand);
   if (!query.has('limit')) query.set('limit', '12');
 
   const [productResult, categories] = await Promise.all([
@@ -36,7 +50,7 @@ export default async function ProductsPage({
   const products = productResult.data;
 
   return (
-    <main className="container py-8">
+    <main className="container pb-8">
       <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
         <h1 className="text-3xl font-semibold text-gray-800 md:text-4xl">Sản phẩm</h1>
       </div>
@@ -45,8 +59,8 @@ export default async function ProductsPage({
         categories={categories}
         values={{
           q: params.q ?? '',
-          category: params.category ?? '',
-          brand: params.brand ?? '',
+          category,
+          brand,
           minPrice: params.minPrice ?? '',
           maxPrice: params.maxPrice ?? '',
           sort: params.sort ?? 'newest',
@@ -72,7 +86,7 @@ export default async function ProductsPage({
           </div>
         )}
 
-        <Pagination meta={productResult.meta} basePath="/products" params={params} />
+        <Pagination meta={productResult.meta} basePath="/san-pham" params={publicParams} />
       </section>
     </main>
   );

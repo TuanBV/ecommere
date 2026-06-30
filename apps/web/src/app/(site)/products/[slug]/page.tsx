@@ -67,7 +67,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const afterSales = asStringList(product.policy?.afterSales);
   const gifts = asStringList(product.policy?.gifts);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  const productUrl = `${siteUrl}/products/${product.slug ?? product.id}`;
+  const productUrl = `${siteUrl}/san-pham/${product.slug ?? product.id}`;
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -93,7 +93,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   };
 
   return (
-    <main className="bg-[#f1f5f9] py-8 text-gray-800">
+    <main className="bg-[#f1f5f9] pb-8 text-gray-800">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -111,7 +111,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             </li>
             <li>
               <Link
-                href={`/products?category=${product.category?.slug ?? ''}`}
+                href={`/san-pham?danh-muc=${product.category?.slug ?? ''}`}
                 className="transition-colors hover:text-blue-900"
               >
                 {product.category?.title ?? 'Sản phẩm'}
@@ -182,7 +182,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                           return (
                             <Link
                               key={variant.id}
-                              href={`/products/${variant.slug ?? product.slug}`}
+                              href={`/san-pham/${variant.slug ?? product.slug}`}
                               className={[
                                 'flex min-h-[60px] min-w-[80px] flex-col items-center justify-center gap-0.5 rounded-[5px] border px-4 py-1 text-sm font-semibold transition-all duration-200',
                                 variant.id === product.id
@@ -383,7 +383,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               </div>
 
               <Link
-                href="/products"
+                href="/san-pham"
                 className="group flex items-center gap-1 text-base font-semibold text-blue-600 transition-all duration-300 hover:text-blue-700 md:text-base"
               >
                 <span>Xem tất cả</span>

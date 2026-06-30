@@ -31,13 +31,13 @@ export default async function NewsPage({
   }));
 
   return (
-    <main className="container py-8">
+    <main className="container pb-8">
       <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-2 text-base text-gray-600">Trang chủ / Tin tức</div>
         <h1 className="text-3xl font-semibold text-gray-800">Tin tức</h1>
       </section>
 
-      <form action="/news" className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
+      <form action="/tin-tuc" className="mb-6 rounded-2xl bg-white p-4 shadow-sm">
         <div className="relative">
           <Search
             size={20}
@@ -57,7 +57,7 @@ export default async function NewsPage({
           {result.data.map((item) => (
             <Link
               key={item.id}
-              href={`/news/${item.slug}`}
+              href={`/tin-tuc/${item.slug}`}
               className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
             >
               <div className="aspect-[16/9] overflow-hidden bg-gray-100">
@@ -90,7 +90,7 @@ export default async function NewsPage({
         </section>
       )}
 
-      <Pagination meta={result.meta} basePath="/news" params={params} />
+      <Pagination meta={result.meta} basePath="/tin-tuc" params={params} />
     </main>
   );
 }

@@ -621,7 +621,7 @@ function ProductList({
                     label="Xem sản phẩm"
                     className="text-emerald-600"
                     onClick={() => {
-                      if (item.slug) window.open(`/products/${item.slug}`, '_blank', 'noopener');
+                      if (item.slug) window.open(`/san-pham/${item.slug}`, '_blank', 'noopener');
                     }}
                   >
                     <Eye size={18} />

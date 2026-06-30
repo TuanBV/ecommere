@@ -1,6 +1,6 @@
 export default function PolicyPage() {
   return (
-    <main className="container py-8">
+    <main className="container pb-8">
       <section className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-2 text-base text-gray-600">Trang chủ / Chính sách</div>
         <h1 className="text-3xl font-semibold text-gray-800">Quy định chung</h1>

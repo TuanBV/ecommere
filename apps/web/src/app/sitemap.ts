@@ -7,20 +7,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     '',
-    '/products',
-    '/about',
-    '/contact',
-    '/news',
-    '/policy/shipping',
-    '/policy/payment',
-    '/policy/warranty',
-    '/policy/return-exchange',
-    '/policy/general-regulations',
-    '/policy/terms-of-use-and-privacy'
+    '/san-pham',
+    '/ve-chung-toi',
+    '/lien-he',
+    '/tin-tuc',
+    '/chinh-sach/quy-dinh-chung',
+    '/chinh-sach/dieu-khoan-su-dung-va-bao-mat',
+    '/chinh-sach/bao-hanh',
+    '/chinh-sach/thanh-toan',
+    '/chinh-sach/van-chuyen',
+    '/chinh-sach/doi-tra'
   ].map((path) => ({
     url: `${siteUrl}${path}`,
     lastModified: now,
-    changeFrequency: path === '' || path === '/products' ? 'daily' : 'weekly',
-    priority: path === '' ? 1 : path === '/products' ? 0.9 : 0.7
+    changeFrequency: path === '' || path === '/san-pham' ? 'daily' : 'weekly',
+    priority: path === '' ? 1 : path === '/san-pham' ? 0.9 : 0.7
   }));
 }
