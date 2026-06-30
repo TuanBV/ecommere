@@ -1,6 +1,8 @@
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
-const serverApiBaseUrl = process.env.API_INTERNAL_URL ?? apiBaseUrl;
-export const mediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? 'http://localhost:3001';
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? '/api';
+const serverApiBaseUrl =
+  process.env.API_INTERNAL_URL ??
+  (typeof window === 'undefined' ? 'http://localhost:3001/api' : apiBaseUrl);
+export const mediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? '';
 
 export type Product = {
   id: string;
@@ -45,6 +47,7 @@ export async function apiGetWithMeta<T>(
 
 export function mediaUrl(path?: string | null) {
   if (!path) return '/placeholder.png';
+  if (path.startsWith('http://localhost:3001')) return path.replace('http://localhost:3001', '');
   if (path.startsWith('http')) return path;
   return `${mediaBaseUrl}${path}`;
 }
@@ -55,6 +58,9 @@ export function mediaVariantUrl(
 ) {
   if (!path) return '/placeholder.png';
   if (/\.(avif|webp|png|jpe?g|gif|svg)$/i.test(path)) return mediaUrl(path);
+  if (path.startsWith('http://localhost:3001')) {
+    return `${path.replace('http://localhost:3001', '')}_${variant}.webp`;
+  }
   if (path.startsWith('http')) return `${path}_${variant}.webp`;
   return `${mediaBaseUrl}${path}_${variant}.webp`;
 }
