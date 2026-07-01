@@ -172,7 +172,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
           open ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         ].join(' ')}
       >
-        <aside
+        <div
           id="mobileSidebar"
           role="dialog"
           aria-modal="true"
@@ -297,7 +297,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
               0852 262 666
             </a>
           </div>
-        </aside>
+        </div>
       </div>
 
       <section
