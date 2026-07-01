@@ -4,6 +4,14 @@ const serverApiBaseUrl =
   (typeof window === 'undefined' ? 'http://localhost:3001/api' : apiBaseUrl);
 export const mediaBaseUrl = process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? '';
 
+const internalMediaOrigins = [
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+  'http://localhost:3010',
+  'http://127.0.0.1:3010',
+  'http://api:3001'
+];
+
 export type Product = {
   id: string;
   title: string;
@@ -47,7 +55,9 @@ export async function apiGetWithMeta<T>(
 
 export function mediaUrl(path?: string | null) {
   if (!path) return '/placeholder.png';
-  if (path.startsWith('http://localhost:3001')) return path.replace('http://localhost:3001', '');
+  for (const origin of internalMediaOrigins) {
+    if (path.startsWith(origin)) return path.replace(origin, '');
+  }
   if (path.startsWith('http')) return path;
   return `${mediaBaseUrl}${path}`;
 }
@@ -57,12 +67,21 @@ export function mediaVariantUrl(
   variant: 'mobile' | 'tablet' | 'pc'
 ) {
   if (!path) return '/placeholder.png';
-  if (/\.(avif|webp|png|jpe?g|gif|svg)$/i.test(path)) return mediaUrl(path);
-  if (path.startsWith('http://localhost:3001')) {
-    return `${path.replace('http://localhost:3001', '')}_${variant}.webp`;
-  }
+  const normalizedPath = internalMediaOrigins.reduce(
+    (current, origin) => (current.startsWith(origin) ? current.replace(origin, '') : current),
+    path
+  );
+
+  const variantPath = normalizedPath.replace(
+    /_(pc|mobile|tablet)(\.(avif|webp|png|jpe?g))$/i,
+    `_${variant}$2`
+  );
+
+  if (variantPath !== normalizedPath) return mediaUrl(variantPath);
+  if (/\.(avif|webp|png|jpe?g|gif|svg)$/i.test(normalizedPath)) return mediaUrl(normalizedPath);
+  if (normalizedPath.startsWith('http')) return `${normalizedPath}_${variant}.webp`;
   if (path.startsWith('http')) return `${path}_${variant}.webp`;
-  return `${mediaBaseUrl}${path}_${variant}.webp`;
+  return `${mediaBaseUrl}${normalizedPath}_${variant}.webp`;
 }
 
 export function money(value: string | number) {

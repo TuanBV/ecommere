@@ -15,6 +15,8 @@ import { ProductCard } from '@/components/product-card';
 import { ResponsiveImage } from '@/components/responsive-image';
 import { Product, apiGet, mediaUrl } from '@/lib/api';
 
+export const dynamic = 'force-dynamic';
+
 type Slider = {
   id: string;
   title: string;
