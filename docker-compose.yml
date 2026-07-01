@@ -30,7 +30,7 @@ services:
       MEDIA_BASE_URL: ${MEDIA_BASE_URL:-http://localhost:3001}
       UPLOAD_DIR: /app/uploads
     ports:
-      - "3001:3001"
+      - "${API_PORT:-3010}:3001"
     depends_on:
       db:
         condition: service_healthy
@@ -47,7 +47,7 @@ services:
       NEXT_PUBLIC_API_URL: /api
       NEXT_PUBLIC_MEDIA_BASE_URL: ""
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3009}:3000"
     depends_on:
       - api
 volumes:
