@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import path from 'node:path';
 
 const apiOrigin =
   process.env.API_PROXY_ORIGIN ??
@@ -7,6 +8,22 @@ const apiOrigin =
 const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true
+  },
+  webpack(config, { isServer }) {
+    if (!isServer) {
+      const modernBrowserNoop = path.resolve(
+        process.cwd(),
+        'src/polyfills/modern-browser-noop.ts'
+      );
+
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '../build/polyfills/polyfill-module': modernBrowserNoop,
+        'next/dist/build/polyfills/polyfill-module': modernBrowserNoop
+      };
+    }
+
+    return config;
   },
   async rewrites() {
     return [
