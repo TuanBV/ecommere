@@ -127,7 +127,7 @@ export default async function HomePage() {
           <div className="mt-8 text-center">
             <Link
               href="/san-pham"
-              className="inline-flex items-center rounded-lg border border-[#1769ff] px-6 py-3 text-sm font-semibold uppercase text-[#1769ff] hover:bg-[#1769ff] hover:text-white"
+              className="inline-flex items-center rounded-lg border border-[#0f4fbf] px-6 py-3 text-sm font-semibold uppercase text-[#0f4fbf] hover:bg-[#0f4fbf] hover:text-white"
             >
               Xem tất cả sản phẩm →
             </Link>
@@ -142,13 +142,13 @@ export default async function HomePage() {
                 <Link
                   key={`${b.id}-${index}`}
                   href={`/san-pham?thuong-hieu=${b.slug ?? ''}`}
-                  className="flex h-16 w-40 shrink-0 items-center justify-center rounded-lg px-4 text-center text-2xl font-semibold uppercase text-gray-500 transition hover:bg-blue-50 hover:text-[#1769ff] md:w-48"
+                  className="flex h-16 w-40 shrink-0 items-center justify-center rounded-lg px-4 text-center text-2xl font-semibold uppercase text-gray-500 transition hover:bg-blue-50 hover:text-[#0f4fbf] md:w-48"
                   aria-label={`Xem sản phẩm thương hiệu ${b.title}`}
                 >
                   {b.logo ? (
                     <img
                       src={mediaUrl(b.logo)}
-                      alt={b.title}
+                      alt=""
                       className="max-h-full max-w-full object-contain"
                     />
                   ) : (
@@ -183,7 +183,7 @@ function CategoryTile({ category }: { category: Category }) {
         {category.logo ? (
           <img
             src={mediaUrl(category.logo)}
-            alt={category.title}
+            alt=""
             className="max-h-full max-w-full object-contain"
           />
         ) : (
@@ -200,7 +200,7 @@ function CategoryTile({ category }: { category: Category }) {
 function PolicyItem({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="flex min-h-[54px] items-center gap-3 rounded-lg bg-white px-4 shadow-sm">
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-[#1769ff] [&_svg]:h-4 [&_svg]:w-4">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-50 text-[#0f4fbf] [&_svg]:h-4 [&_svg]:w-4">
         {icon}
       </span>
       <span className="text-sm font-semibold leading-snug text-gray-700">{title}</span>
@@ -223,12 +223,12 @@ function ProductStrip({
         href="/san-pham"
         className="relative hidden min-h-[280px] overflow-hidden rounded-lg bg-white shadow-sm md:block"
       >
-        <img src={sideImage} alt={title} className="h-full w-full object-cover" />
+        <img src={sideImage} alt="" className="h-full w-full object-cover" />
       </Link>
       <div>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-gray-800">{title}</h2>
-          <Link href="/san-pham" className="text-sm font-semibold text-[#1769ff]">
+          <Link href="/san-pham" className="text-sm font-semibold text-[#0f4fbf]">
             Xem thêm →
           </Link>
         </div>
@@ -280,7 +280,7 @@ function AboutBlock() {
               key={i}
               className="flex items-center gap-3 rounded-lg border border-gray-100 p-4 text-base font-semibold text-gray-700"
             >
-              <CheckCircle2 className="text-[#1769ff]" size={18} />
+              <CheckCircle2 className="text-[#0f4fbf]" size={18} />
               {i}
             </div>
           ))}
@@ -298,14 +298,14 @@ function AboutBlock() {
             <p>
               <b>Hotline:</b>
               <br />
-              <a className="text-[#1769ff]" href="tel:0852262666">
+              <a className="text-[#0f4fbf]" href="tel:0852262666">
                 0852262666
               </a>
             </p>
             <p>
               <b>Email:</b>
               <br />
-              <a className="text-[#1769ff]" href="mailto:greenhome@gmail.com">
+              <a className="text-[#0f4fbf]" href="mailto:greenhome@gmail.com">
                 greenhome@gmail.com
               </a>
             </p>

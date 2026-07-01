@@ -23,7 +23,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
     <main className="container pb-8">
       <article className="overflow-hidden rounded-2xl bg-white shadow-sm">
         {item.thumbnail ? (
-          <img src={mediaUrl(item.thumbnail)} alt={item.title} className="w-full object-cover" />
+          <img src={mediaUrl(item.thumbnail)} alt="" className="w-full object-cover" />
         ) : null}
         <div className="p-6 md:p-8">
           <Link href="/tin-tuc" className="text-sm font-bold text-blue-600">

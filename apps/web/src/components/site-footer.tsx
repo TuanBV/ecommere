@@ -82,7 +82,7 @@ export function SiteFooter() {
               <source type="image/webp" srcSet="/client/images/greenhome-logo-500.lossless.webp" />
               <img
                 src="/client/images/logo.png"
-                alt="Logo Green Home Shop"
+                alt=""
                 className="h-auto w-[180px] object-contain md:w-[200px]"
                 width={200}
                 height={43}
@@ -191,14 +191,12 @@ export function SiteFooter() {
         <FloatingIcon
           href="https://www.messenger.com/t/191032857437399"
           img="/common/images/facebook-messenger.svg"
-          alt="Messenger"
           label="Chat qua Facebook"
         />
 
         <FloatingIcon
           href={`https://zalo.me/${phone}`}
           img="/common/images/zalo.svg"
-          alt="Zalo"
           label="Chat qua Zalo"
         />
 
@@ -236,11 +234,11 @@ export function SiteFooter() {
           </MobileAction>
 
           <MobileAction href={`https://zalo.me/${phone}`} label="Zalo">
-            <img src="/common/images/zalo.svg" alt="Zalo" className="h-6 w-6" />
+            <img src="/common/images/zalo.svg" alt="" className="h-6 w-6" />
           </MobileAction>
 
           <MobileAction href="https://m.me/191032857437399" label="Tin nhắn">
-            <img src="/common/images/facebook-messenger.svg" alt="Messenger" className="h-6 w-6" />
+            <img src="/common/images/facebook-messenger.svg" alt="" className="h-6 w-6" />
           </MobileAction>
 
           <button
@@ -292,25 +290,16 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
   );
 }
 
-function FloatingIcon({
-  href,
-  img,
-  alt,
-  label
-}: {
-  href: string;
-  img: string;
-  alt: string;
-  label: string;
-}) {
+function FloatingIcon({ href, img, label }: { href: string; img: string; label: string }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      aria-label={label}
       className="group relative flex h-14 w-14 items-center justify-center rounded-full border border-gray-100 bg-white shadow-xl transition-all duration-300 hover:scale-110"
     >
-      <img width={32} height={32} src={img} alt={alt} className="h-8 w-8" />
+      <img width={32} height={32} src={img} alt="" className="h-8 w-8" />
 
       <span className="pointer-events-none absolute left-full ml-4 translate-x-2 whitespace-nowrap rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white opacity-0 shadow-2xl transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
         {label}
@@ -331,6 +320,7 @@ function MobileAction({
   return (
     <a
       href={href}
+      aria-label={label}
       className="group flex flex-1 flex-col items-center justify-center border-r border-gray-100"
     >
       <div className="mb-1 transition-transform group-active:scale-90">{children}</div>

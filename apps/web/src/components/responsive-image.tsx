@@ -6,6 +6,8 @@ type ResponsiveImageProps = {
   className?: string;
   imgClassName?: string;
   priority?: boolean;
+  loading?: 'eager' | 'lazy';
+  fetchPriority?: 'high' | 'low' | 'auto';
 };
 
 export function ResponsiveImage({
@@ -13,8 +15,13 @@ export function ResponsiveImage({
   alt,
   className = '',
   imgClassName = '',
-  priority = false
+  priority = false,
+  loading,
+  fetchPriority
 }: ResponsiveImageProps) {
+  const imageFetchPriority = fetchPriority ?? (priority ? 'high' : 'auto');
+  const imageLoading = loading ?? (priority ? 'eager' : 'lazy');
+
   return (
     <picture className={className}>
       <source media="(max-width: 640px)" srcSet={mediaVariantUrl(src, 'mobile')} />
@@ -23,8 +30,10 @@ export function ResponsiveImage({
         src={mediaVariantUrl(src, 'pc')}
         alt={alt}
         className={imgClassName}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding={priority ? 'sync' : 'async'}
+        loading={imageLoading}
+        decoding="async"
+        fetchPriority={imageFetchPriority}
+        {...({ fetchpriority: imageFetchPriority } as Record<string, string>)}
       />
     </picture>
   );

@@ -239,7 +239,7 @@ export function CheckoutForm() {
                       <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
                         <ResponsiveImage
                           src={item.image}
-                          alt={item.title}
+                          alt=""
                           className="absolute inset-0 p-1"
                           imgClassName="h-full w-full object-contain"
                         />

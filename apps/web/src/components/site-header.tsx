@@ -90,21 +90,17 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   useEffect(() => {
     if (open) {
       syncActiveFiltersFromLocation();
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = scrollbarWidth ? `${scrollbarWidth}px` : '';
-      closeButtonRef.current?.focus();
+      requestAnimationFrame(() => closeButtonRef.current?.focus());
       if (activeCategoryIds.length) {
         setMobileExpandedCategoryIds((current) => [...new Set([...current, ...activeCategoryIds])]);
       }
     } else {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
     }
 
     return () => {
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
     };
   }, [activeCategoryIds, open]);
 
@@ -192,7 +188,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                 />
                 <img
                   src="/client/images/logo.png"
-                  alt="Logo Green Home Shop"
+                  alt=""
                   className="h-auto w-[180px] object-contain md:w-[200px]"
                   width={200}
                   height={43}
@@ -324,7 +320,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
                   />
                   <img
                     src="/client/images/logo.png"
-                    alt="Logo Green Home Shop"
+                    alt=""
                     className="h-auto w-[180px] object-contain md:w-[200px]"
                     width={200}
                     height={43}

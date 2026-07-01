@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ProductActions, ProductGallery } from './product-actions';
 import { ProductCard } from '@/components/product-card';
-import { Product, apiGet, mediaUrl, money } from '@/lib/api';
+import { Product, apiGet, mediaUrl, mediaVariantUrl, money } from '@/lib/api';
 
 type ProductDetail = Product & {
   content?: string | null;
@@ -62,6 +62,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const images = product.images?.length
     ? product.images
     : [{ id: product.id, imageUrl: product.image ?? '' }];
+  const lcpImage = images[0]?.imageUrl;
 
   const policies = asStringList(product.policy?.policies);
   const afterSales = asStringList(product.policy?.afterSales);
@@ -94,6 +95,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="bg-[#f1f5f9] pb-8 text-gray-800">
+      {lcpImage ? <ProductImagePreload imageUrl={lcpImage} /> : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
@@ -403,6 +405,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         ) : null}
       </div>
     </main>
+  );
+}
+
+function ProductImagePreload({ imageUrl }: { imageUrl: string }) {
+  const mobile = mediaVariantUrl(imageUrl, 'mobile');
+  const tablet = mediaVariantUrl(imageUrl, 'tablet');
+  const pc = mediaVariantUrl(imageUrl, 'pc');
+  const srcSet = `${mobile} 640w, ${tablet} 1024w, ${pc} 1280w`;
+  const sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 640px';
+
+  return (
+    <link
+      rel="preload"
+      as="image"
+      href={mobile}
+      imageSrcSet={srcSet}
+      imageSizes={sizes}
+      fetchPriority="high"
+      {...({ fetchpriority: 'high', imagesrcset: srcSet, imagesizes: sizes } as Record<
+        string,
+        string
+      >)}
+    />
   );
 }
 

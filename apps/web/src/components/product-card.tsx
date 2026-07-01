@@ -23,24 +23,25 @@ export function ProductCard({ product }: { product: Product }) {
 
       <Link
         href={`/san-pham/${product.slug ?? product.id}`}
+        aria-label={`Xem chi tiết ${product.title}`}
         className="relative block aspect-[1.12] bg-white p-3"
       >
         <ResponsiveImage
           src={product.image}
-          alt={product.title}
+          alt=""
           className="absolute inset-0"
           imgClassName="h-full w-full object-contain p-3 transition-transform duration-300 group-hover:scale-105"
         />
       </Link>
 
       <div className="flex flex-1 flex-col px-3 pb-3">
-        <div className="mb-1 text-xs font-semibold uppercase text-[#1769ff]">
+        <div className="mb-1 text-xs font-semibold uppercase text-[#0f4fbf]">
           {product.brand?.title ?? product.category?.title ?? 'GREENHOME'}
         </div>
 
         <Link
           href={`/san-pham/${product.slug ?? product.id}`}
-          className="line-clamp-2 min-h-[44px] text-sm font-semibold leading-5 text-[#334155] hover:text-[#1769ff] md:text-[15px] md:leading-6"
+          className="line-clamp-2 min-h-[44px] text-sm font-semibold leading-5 text-[#334155] hover:text-[#0f4fbf] md:text-[15px] md:leading-6"
         >
           {product.title}
         </Link>
@@ -55,7 +56,7 @@ export function ProductCard({ product }: { product: Product }) {
         <button
           type="button"
           disabled={disabled}
-          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#263449] text-sm font-semibold text-white transition hover:bg-[#1769ff] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="mt-auto flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#263449] text-sm font-semibold text-white transition hover:bg-[#0f4fbf] disabled:cursor-not-allowed disabled:bg-gray-300"
           onClick={() =>
             add({
               productId: product.id,

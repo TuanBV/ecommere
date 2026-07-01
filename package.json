@@ -7,6 +7,26 @@
     "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
     "prisma:generate": "npm run prisma:generate -w apps/api"
   },
+  "browserslist": {
+    "production": [
+      "last 2 Chrome versions",
+      "last 2 Edge versions",
+      "last 2 Firefox versions",
+      "last 2 Safari versions",
+      "last 2 iOS versions",
+      "Chrome >= 109",
+      "Edge >= 109",
+      "Firefox >= 115",
+      "Safari >= 16.4",
+      "iOS >= 16.4"
+    ],
+    "development": [
+      "last 1 Chrome version",
+      "last 1 Edge version",
+      "last 1 Firefox version",
+      "last 1 Safari version"
+    ]
+  },
   "workspaces": [
     "apps/api",
     "apps/web"

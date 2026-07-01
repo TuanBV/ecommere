@@ -63,7 +63,7 @@ export default async function NewsPage({
               <div className="aspect-[16/9] overflow-hidden bg-gray-100">
                 <img
                   src={mediaUrl(item.thumbnail)}
-                  alt={item.title}
+                  alt=""
                   className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                 />
               </div>

@@ -36,10 +36,11 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
       <div className="group relative mb-6 aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-white">
         <ResponsiveImage
           src={activeImage.imageUrl}
-          alt={title}
+          alt={`Ảnh sản phẩm ${title}`}
           className="absolute inset-0 block"
           imgClassName="h-full w-full object-contain bg-white"
           priority
+          fetchPriority="high"
         />
 
         {galleryImages.length > 1 ? (
@@ -73,6 +74,7 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
                 key={image.id}
                 type="button"
                 onClick={() => setActiveIndex(index)}
+                aria-label={`Xem ảnh sản phẩm ${index + 1}`}
                 className={[
                   'aspect-square overflow-hidden rounded-xl border-2 bg-gray-50 transition-all',
                   activeIndex === index
@@ -82,9 +84,11 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
               >
                 <ResponsiveImage
                   src={image.imageUrl}
-                  alt={title}
+                  alt=""
                   className="relative block h-full w-full"
                   imgClassName="h-full w-full object-cover"
+                  loading={index === activeIndex ? 'eager' : 'lazy'}
+                  fetchPriority={index === activeIndex ? 'low' : 'auto'}
                 />
               </button>
             ))}
