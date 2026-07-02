@@ -2,10 +2,12 @@
 set -eu
 
 docker compose pull db || true
-docker compose up -d --build
-docker compose ps
+docker compose up -d db
+docker compose exec -T db sh -c 'until mariadb-admin ping -uroot -proot --silent; do sleep 1; done'
 docker compose exec -T db mariadb -uroot -proot -e "
 CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
 "
 
 PRODUCTS_COUNT="$(
@@ -24,3 +26,6 @@ else
   SELECT COUNT(*) AS products FROM product WHERE COALESCE(del_flag, 0) = 0;
   "
 fi
+
+docker compose up -d --build api web
+docker compose ps

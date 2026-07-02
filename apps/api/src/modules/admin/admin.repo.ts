@@ -724,6 +724,7 @@ export class AdminRepository {
   }
 
   async publishDueFacebookPosts(limit = 5) {
+    if (!(await this.tableExists('facebook_post'))) return 0;
     const dueItems = await this.prisma.facebookPost.findMany({
       where: {
         delFlag: 0,
@@ -743,6 +744,19 @@ export class AdminRepository {
       await this.publishFacebookPostItem(item);
     }
     return dueItems.length;
+  }
+
+  private async tableExists(tableName: string) {
+    const rows = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
+      `
+        SELECT COUNT(*) AS count
+        FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = ?
+      `,
+      tableName
+    );
+    return Number(rows[0]?.count ?? 0) > 0;
   }
 
   private async publishFacebookPostItem(item: {
