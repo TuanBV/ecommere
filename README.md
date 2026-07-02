@@ -15,7 +15,7 @@ Khong bat buoc cai Node.js, npm, MySQL client neu chi chay bang Docker.
 Mo PowerShell tai thu muc project va chay:
 
 ```powershell
-docker compose up --build
+docker compose up -d --build
 ```
 
 Sau khi cac container chay xong, mo:
@@ -37,41 +37,47 @@ Docker se tu dong:
 
 Ban khong can chay lenh import MySQL thu cong.
 
-## 4. Chay Nen Background
+## 4. Chay Tren VPS
 
-Neu muon chay ngam:
+Tren VPS luon chay Docker Compose o che do nen `-d`. Neu chay foreground va dong terminal/SSH hoac bam `Ctrl+C`, Compose se dung container va log se co dong `Gracefully Stopping`.
 
-```powershell
-docker compose up --build -d
+```bash
+sh scripts/deploy-vps.sh
+```
+
+Hoac chay thu cong:
+
+```bash
+docker compose up -d --build
 ```
 
 Xem container:
 
-```powershell
+```bash
 docker compose ps
 ```
 
 Xem log tat ca service:
 
-```powershell
+```bash
 docker compose logs -f
 ```
 
 Xem log rieng backend:
 
-```powershell
+```bash
 docker compose logs -f api
 ```
 
 Xem log rieng frontend:
 
-```powershell
+```bash
 docker compose logs -f web
 ```
 
 Xem log rieng database:
 
-```powershell
+```bash
 docker compose logs -f db
 ```
 
@@ -86,7 +92,7 @@ docker compose down
 Lan sau chay lai:
 
 ```powershell
-docker compose up -d
+docker compose up -d --build
 ```
 
 ## 6. Reset Database Va Import Lai Dump

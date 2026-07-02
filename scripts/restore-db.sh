@@ -8,6 +8,9 @@ fi
 
 docker compose up -d db
 docker compose exec -T db sh -c 'until mariadb-admin ping -uroot -proot --silent; do sleep 1; done'
+docker compose exec -T db mariadb -uroot -proot -e "
+CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+"
 docker compose exec -T db mariadb -uroot -proot core < scripts/dump-core.sql
 docker compose exec -T db mariadb -uroot -proot core < database/init/02-admin-dev.sql
 docker compose exec -T db mariadb -uroot -proot core < database/migrations/20260702_facebook_posts.sql
