@@ -19,11 +19,35 @@ services:
       test:
         [
           "CMD-SHELL",
-          "healthcheck.sh --connect --innodb_initialized && mariadb -uroot -p$${MARIADB_ROOT_PASSWORD} -e 'CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
+          "healthcheck.sh --connect --innodb_initialized && mariadb -uroot -p$${MARIADB_ROOT_PASSWORD} -e \"CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '$${MARIADB_ROOT_PASSWORD}' WITH GRANT OPTION; FLUSH PRIVILEGES;\""
         ]
       interval: 10s
       timeout: 5s
       retries: 10
+  db-init:
+    image: mariadb:10.11
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - ./scripts/dump-core.sql:/seed/01-core.sql:ro
+      - ./database/init/02-admin-dev.sql:/seed/02-admin-dev.sql:ro
+      - ./database/migrations/20260702_facebook_posts.sql:/seed/03-facebook-posts.sql:ro
+    command: >
+      sh -c "
+        until mariadb-admin ping -h db -uroot -p$${MARIADB_ROOT_PASSWORD} --silent; do sleep 1; done;
+        mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} -e \"CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\";
+        PRODUCT_TABLE=$$(mariadb -N -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core -e \"SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'product';\");
+        if [ \"$$PRODUCT_TABLE\" = \"0\" ]; then
+          mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/01-core.sql;
+          mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/02-admin-dev.sql;
+        fi;
+        mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/03-facebook-posts.sql;
+        mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core -e \"SELECT COUNT(*) AS products FROM product WHERE COALESCE(del_flag,0)=0;\";
+      "
   api:
     build:
       context: .
@@ -42,6 +66,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     volumes:
       - ./uploads:/app/uploads
   web:

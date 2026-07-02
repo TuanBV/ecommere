@@ -9,6 +9,7 @@ CREATE DATABASE IF NOT EXISTS core CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 "
+docker compose up db-init
 
 PRODUCTS_COUNT="$(
   docker compose exec -T db mariadb -N -uroot -proot core -e "
