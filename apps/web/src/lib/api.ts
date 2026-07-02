@@ -9,7 +9,13 @@ const internalMediaOrigins = [
   'http://127.0.0.1:3001',
   'http://localhost:3010',
   'http://127.0.0.1:3010',
-  'http://api:3001'
+  'http://api:3001',
+  'https://greenhomeshop.vn',
+  'http://greenhomeshop.vn',
+  'https://www.greenhomeshop.vn',
+  'http://www.greenhomeshop.vn',
+  'https://test.saisys.io.vn',
+  'http://test.saisys.io.vn'
 ];
 
 export type Product = {
@@ -60,6 +66,14 @@ export function mediaUrl(path?: string | null) {
   }
   if (path.startsWith('http')) return path;
   return `${mediaBaseUrl}${path}`;
+}
+
+export function normalizeMediaHtml(html?: string | null) {
+  if (!html) return '';
+  return internalMediaOrigins.reduce(
+    (content, origin) => content.replaceAll(`${origin}/uploads/`, `${mediaBaseUrl || ''}/uploads/`),
+    html
+  );
 }
 
 export function mediaVariantUrl(

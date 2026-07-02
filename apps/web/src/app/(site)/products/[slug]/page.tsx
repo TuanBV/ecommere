@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ProductActions, ProductGallery } from './product-actions';
 import { ProductCard } from '@/components/product-card';
-import { Product, apiGet, mediaUrl, mediaVariantUrl, money } from '@/lib/api';
+import { Product, apiGet, mediaUrl, mediaVariantUrl, money, normalizeMediaHtml } from '@/lib/api';
 
 type ProductDetail = Product & {
   content?: string | null;
@@ -270,7 +270,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {product.content ? (
                 <div
                   className="product-content sun-editor-editable p-5 pt-0 text-justify text-base leading-8 text-slate-700 [&_a]:text-blue-600 [&_a]:underline [&_h2]:mb-4 [&_h2]:mt-8 [&_h2]:border-l-4 [&_h2]:border-blue-600 [&_h2]:pl-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-slate-900 [&_table]:my-6 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-slate-200 [&_td]:p-3 [&_th]:border [&_th]:border-slate-200 [&_th]:p-3"
-                  dangerouslySetInnerHTML={{ __html: product.content }}
+                  dangerouslySetInnerHTML={{ __html: normalizeMediaHtml(product.content) }}
                 />
               ) : (
                 <p className="p-5 pt-0 leading-7 text-gray-700">
@@ -293,7 +293,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 {product.specification ? (
                   <div
                     className="spec-table max-w-full p-2 text-base [overflow-wrap:anywhere] [word-break:break-word] [&_*]:max-w-full [&_img]:h-auto [&_img]:max-w-full [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse [&_td:first-child:not(:last-child)]:w-[40%] [&_td:first-child:not(:last-child)]:bg-slate-50 [&_td:first-child:not(:last-child)]:font-semibold [&_td]:whitespace-normal [&_td]:break-words [&_td]:border [&_td]:border-slate-100 [&_td]:bg-white [&_td]:p-3 [&_td]:text-base [&_td]:leading-5 [&_td]:text-slate-700 [&_th]:whitespace-normal [&_th]:break-words [&_th]:border [&_th]:border-slate-100 [&_th]:bg-slate-50 [&_th]:p-3"
-                    dangerouslySetInnerHTML={{ __html: product.specification }}
+                    dangerouslySetInnerHTML={{ __html: normalizeMediaHtml(product.specification) }}
                   />
                 ) : (
                   <p className="p-5 text-base text-gray-600">

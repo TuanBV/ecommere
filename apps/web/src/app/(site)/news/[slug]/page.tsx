@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CalendarDays } from 'lucide-react';
-import { apiGet, mediaUrl } from '@/lib/api';
+import { apiGet, mediaUrl, normalizeMediaHtml } from '@/lib/api';
 
 type NewsDetail = {
   id: string;
@@ -43,7 +43,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ slu
           ) : null}
           <div
             className="prose prose-slate mt-6 max-w-none"
-            dangerouslySetInnerHTML={{ __html: item.content ?? '' }}
+            dangerouslySetInnerHTML={{ __html: normalizeMediaHtml(item.content) }}
           />
         </div>
       </article>

@@ -20,9 +20,9 @@ docker compose up --build
 
 Sau khi cac container chay xong, mo:
 
-- Web: `http://localhost:3000`
-- API: `http://localhost:3001/api`
-- Swagger: `http://localhost:3001/docs`
+- Web: `http://localhost:3009`
+- API: `http://localhost:3010/api`
+- Swagger: `http://localhost:3010/docs`
 - Database host port: `localhost:3307`
 
 ## 3. Lan Chay Dau Tien
@@ -30,7 +30,7 @@ Sau khi cac container chay xong, mo:
 Docker se tu dong:
 
 1. Tao MariaDB database `core`.
-2. Import file `dump-core-202606100141.sql` vao database.
+2. Import file `scripts/dump-core.sql` vao database.
 3. Build backend NestJS trong `apps/api`.
 4. Build frontend Next.js trong `apps/web`.
 5. Chay 3 service: `db`, `api`, `web`.
@@ -102,6 +102,26 @@ docker compose up --build
 
 Can than: lenh `docker compose down -v` se xoa volume database hien tai.
 
+Neu VPS bi trong san pham sau khi chay lai Docker, kiem tra count truoc:
+
+```bash
+sh scripts/check-db.sh
+```
+
+Neu `products = 0`, import lai dump:
+
+```bash
+sh scripts/restore-db.sh
+docker compose up -d --build api web
+```
+
+Luu y:
+
+- `docker compose down` khong xoa database.
+- `docker compose down -v` se xoa database volume.
+- Docker Compose da co `name: ecommere` de tranh doi ten thu muc deploy lam Docker tao volume moi.
+- File `scripts/dump-core.sql` phai ton tai tren VPS va co du lieu san pham.
+
 ## 7. Kiem Tra Database
 
 Vao MariaDB shell trong container:
@@ -130,13 +150,13 @@ exit;
 PowerShell:
 
 ```powershell
-Invoke-RestMethod "http://localhost:3001/api/products?limit=2"
+Invoke-RestMethod "http://localhost:3010/api/products?limit=2"
 ```
 
 Hoac mo Swagger:
 
 ```text
-http://localhost:3001/docs
+http://localhost:3010/docs
 ```
 
 ## 9. Dang Nhap Quan Tri
@@ -144,7 +164,7 @@ http://localhost:3001/docs
 Mo trang admin:
 
 ```text
-http://localhost:3000/admin
+http://localhost:3009/admin
 ```
 
 Tai khoan admin local:
@@ -177,9 +197,9 @@ docker-compose.yml
 
 Services:
 
-- `db`: MariaDB 10.11, tu import `dump-core-202606100141.sql`
-- `api`: NestJS backend, chay port `3001`
-- `web`: Next.js frontend, chay port `3000`
+- `db`: MariaDB 10.11, tu import `scripts/dump-core.sql`
+- `api`: NestJS backend, chay port host `3010`
+- `web`: Next.js frontend, chay port host `3009`
 
 Database trong Docker network:
 
@@ -197,8 +217,8 @@ mysql://root:root@localhost:3307/core
 
 Mac dinh:
 
-- `3000`: Next.js web
-- `3001`: NestJS API
+- `3009`: Next.js web
+- `3010`: NestJS API
 - `3307`: MariaDB exposed ra may host
 
 Neu may ban da dung port `3307`, co the doi bang bien moi truong khi chay:
@@ -212,13 +232,13 @@ Sau do database host port se la `localhost:3308`. API trong Docker van tu ket no
 
 ## 12. Loi Thuong Gap
 
-### Loi: port `3000`, `3001` hoac `3307` da duoc dung
+### Loi: port `3009`, `3010` hoac `3307` da duoc dung
 
 Kiem tra process dang giu port:
 
 ```powershell
-Get-NetTCPConnection -LocalPort 3000 -State Listen
-Get-NetTCPConnection -LocalPort 3001 -State Listen
+Get-NetTCPConnection -LocalPort 3009 -State Listen
+Get-NetTCPConnection -LocalPort 3010 -State Listen
 Get-NetTCPConnection -LocalPort 3307 -State Listen
 ```
 
