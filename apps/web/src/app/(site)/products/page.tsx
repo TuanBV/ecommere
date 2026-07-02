@@ -33,17 +33,19 @@ export default async function ProductsPage({
   };
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (!value || ['danh-muc', 'thuong-hieu', 'category', 'brand'].includes(key)) continue;
+    if (!value || ['danh-muc', 'thuong-hieu', 'category', 'brand', 'limit'].includes(key)) {
+      continue;
+    }
     query.set(key, value);
   }
   if (category) query.set('category', category);
   if (brand) query.set('brand', brand);
-  if (!query.has('limit')) query.set('limit', '12');
+  query.set('limit', '10');
 
   const [productResult, categories] = await Promise.all([
     apiGetWithMeta<Product[]>(`/products?${query.toString()}`).catch(() => ({
       data: [],
-      meta: { page: 1, limit: 12, total: 0, totalPages: 1 }
+      meta: { page: 1, limit: 10, total: 0, totalPages: 1 }
     })),
     apiGet<Category[]>('/categories').catch(() => [])
   ]);
