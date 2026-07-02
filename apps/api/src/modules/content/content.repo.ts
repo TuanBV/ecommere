@@ -60,7 +60,10 @@ export class ContentRepository {
       include: { category: true, brand: true, author: true }
     });
     if (!item) throw new NotFoundException('News not found');
-    await this.prisma.news.update({ where: { id: item.id }, data: { viewCount: { increment: 1 } } });
+    await this.prisma.news.update({
+      where: { id: item.id },
+      data: { viewCount: { increment: 1 } }
+    });
     return item;
   }
 

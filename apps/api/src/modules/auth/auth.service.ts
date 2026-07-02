@@ -24,7 +24,13 @@ export class AuthService {
     return {
       accessToken: await this.signAccess(payload),
       refreshToken: await this.signRefresh(payload),
-      user: { id: user.id, username: user.username, email: user.email, fullName: user.fullName, role: user.role }
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role
+      }
     };
   }
 

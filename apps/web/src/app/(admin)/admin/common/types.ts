@@ -115,6 +115,24 @@ export type AdminContact = {
   note?: string | null;
 };
 
+export type AdminFacebookPost = {
+  id: string;
+  pageId: string;
+  pageName?: string | null;
+  pageAccessToken?: string | null;
+  message: string;
+  linkUrl?: string | null;
+  imageUrl?: string | null;
+  facebookPostId?: string | null;
+  graphVersion?: string | null;
+  status?: string | null;
+  lastError?: string | null;
+  scheduledAt?: string | null;
+  publishedAt?: string | null;
+  createdDate?: string | null;
+  updatedDate?: string | null;
+};
+
 export type Tab =
   | 'dashboard'
   | 'categories'
@@ -124,6 +142,7 @@ export type Tab =
   | 'banners'
   | 'sliders'
   | 'news'
+  | 'facebook-posts'
   | 'policies'
   | 'contacts'
   | 'users'

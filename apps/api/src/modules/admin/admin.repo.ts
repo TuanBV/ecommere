@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import {
   AdminBannerDto,
   AdminContactStatusDto,
+  AdminFacebookPostDto,
   AdminOrderStatusDto,
   AdminNewsDto,
   AdminPolicyDto,
@@ -15,6 +16,7 @@ import {
   AdminTaxonomyDto,
   AdminUserDto,
   UpdateAdminBannerDto,
+  UpdateAdminFacebookPostDto,
   UpdateAdminNewsDto,
   UpdateAdminPolicyDto,
   UpdateAdminProductDto,
@@ -23,7 +25,15 @@ import {
   UpdateAdminUserDto
 } from './dto/admin.dto';
 
-type AdminTable = 'category' | 'brand' | 'review' | 'banner' | 'slider' | 'news' | 'contact' | 'policy';
+type AdminTable =
+  | 'category'
+  | 'brand'
+  | 'review'
+  | 'banner'
+  | 'slider'
+  | 'news'
+  | 'contact'
+  | 'policy';
 
 @Injectable()
 export class AdminRepository {
@@ -57,7 +67,11 @@ export class AdminRepository {
             }
           : {})
       },
-      include: { category: true, brand: true, images: { where: { delFlag: 0 }, orderBy: { sortOrder: 'asc' } } },
+      include: {
+        category: true,
+        brand: true,
+        images: { where: { delFlag: 0 }, orderBy: { sortOrder: 'asc' } }
+      },
       orderBy: { updatedDate: 'desc' },
       take: 100
     });
@@ -76,28 +90,28 @@ export class AdminRepository {
     return this.prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
-        id,
-        title: String(body.title),
-        sku: String(body.sku),
-        slug: String(body.slug),
-        categoryId: String(body.categoryId),
-        brandId: String(body.brandId),
-        ...(body.policyId ? { policyId: String(body.policyId) } : {}),
-        price: new Prisma.Decimal(String(body.price ?? 0)),
-        salePrice: new Prisma.Decimal(String(body.salePrice ?? 0)),
-        stockQty: Number(body.stockQty ?? 0),
-        status: Number(body.status ?? 1),
-        image: body.image ? String(body.image) : null,
-        description: body.description ? String(body.description) : null,
-        content: body.content ? String(body.content) : null,
-        specification: body.specification ? String(body.specification) : null,
-        variantName: body.variantName ? String(body.variantName) : null,
-        color: body.color ? String(body.color) : null,
-        size: body.size ? String(body.size) : null,
-        groupId,
-        createdDate: new Date(),
-        updatedDate: new Date()
-      }
+          id,
+          title: String(body.title),
+          sku: String(body.sku),
+          slug: String(body.slug),
+          categoryId: String(body.categoryId),
+          brandId: String(body.brandId),
+          ...(body.policyId ? { policyId: String(body.policyId) } : {}),
+          price: new Prisma.Decimal(String(body.price ?? 0)),
+          salePrice: new Prisma.Decimal(String(body.salePrice ?? 0)),
+          stockQty: Number(body.stockQty ?? 0),
+          status: Number(body.status ?? 1),
+          image: body.image ? String(body.image) : null,
+          description: body.description ? String(body.description) : null,
+          content: body.content ? String(body.content) : null,
+          specification: body.specification ? String(body.specification) : null,
+          variantName: body.variantName ? String(body.variantName) : null,
+          color: body.color ? String(body.color) : null,
+          size: body.size ? String(body.size) : null,
+          groupId,
+          createdDate: new Date(),
+          updatedDate: new Date()
+        }
       });
 
       if (groupId && relatedProductIds.length) {
@@ -167,7 +181,9 @@ export class AdminRepository {
           ...(body.description !== undefined
             ? { description: body.description ? String(body.description) : null }
             : {}),
-          ...(body.content !== undefined ? { content: body.content ? String(body.content) : null } : {}),
+          ...(body.content !== undefined
+            ? { content: body.content ? String(body.content) : null }
+            : {}),
           ...(body.specification !== undefined
             ? { specification: body.specification ? String(body.specification) : null }
             : {}),
@@ -585,6 +601,204 @@ export class AdminRepository {
     });
   }
 
+  async facebookPosts() {
+    const items = await this.prisma.facebookPost.findMany({
+      where: { delFlag: 0 },
+      orderBy: { createdDate: 'desc' },
+      take: 100
+    });
+    return items.map(maskFacebookToken);
+  }
+
+  async createFacebookPost(body: AdminFacebookPostDto) {
+    const id = randomUUID();
+    const pageId = String(body.pageId ?? '').trim();
+    const message = String(body.message ?? '').trim();
+    const pageAccessToken = String(body.pageAccessToken ?? '').trim();
+    const graphVersion = normalizeGraphVersion(body.graphVersion);
+    const scheduledAt = parseFacebookScheduledAt(body.scheduledAt);
+    if (!pageId || !message) throw new BadRequestException('Page ID and message are required');
+    if ((body.publishNow !== false || scheduledAt) && !pageAccessToken) {
+      throw new BadRequestException('Page Access Token is required to publish to Facebook');
+    }
+
+    const baseData = {
+      id,
+      pageId,
+      pageName: body.pageName ? String(body.pageName).trim() : null,
+      pageAccessToken: pageAccessToken || null,
+      message,
+      linkUrl: body.linkUrl ? String(body.linkUrl).trim() : null,
+      imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null,
+      graphVersion,
+      scheduledAt,
+      status: scheduledAt ? 'SCHEDULED' : 'DRAFT',
+      delFlag: 0,
+      createdDate: new Date(),
+      updatedDate: new Date()
+    };
+
+    const draft = await this.prisma.facebookPost.create({ data: baseData });
+    if (body.publishNow === false) return maskFacebookToken(draft);
+    return this.publishFacebookPostItem(draft);
+  }
+
+  async updateFacebookPost(id: string, body: UpdateAdminFacebookPostDto) {
+    const current = await this.prisma.facebookPost.findUnique({ where: { id } });
+    if (!current || current.delFlag) throw new BadRequestException('Facebook post not found');
+
+    const nextPageId = body.pageId !== undefined ? String(body.pageId).trim() : current.pageId;
+    const nextMessage = body.message !== undefined ? String(body.message).trim() : current.message;
+    const tokenInput =
+      body.pageAccessToken !== undefined ? String(body.pageAccessToken).trim() : '';
+    const nextToken = tokenInput || current.pageAccessToken || '';
+    const nextGraphVersion =
+      body.graphVersion !== undefined
+        ? normalizeGraphVersion(body.graphVersion)
+        : (current.graphVersion ?? 'v20.0');
+    const nextScheduledAt =
+      body.scheduledAt !== undefined
+        ? parseFacebookScheduledAt(body.scheduledAt)
+        : current.scheduledAt;
+    if (!nextPageId || !nextMessage)
+      throw new BadRequestException('Page ID and message are required');
+    if ((body.publishNow !== false || nextScheduledAt) && !nextToken) {
+      throw new BadRequestException('Page Access Token is required to publish to Facebook');
+    }
+
+    let item = await this.prisma.facebookPost.update({
+      where: { id },
+      data: {
+        ...(body.pageId !== undefined ? { pageId: nextPageId } : {}),
+        ...(body.pageName !== undefined
+          ? { pageName: body.pageName ? String(body.pageName).trim() : null }
+          : {}),
+        ...(tokenInput ? { pageAccessToken: tokenInput } : {}),
+        ...(body.message !== undefined ? { message: nextMessage } : {}),
+        ...(body.linkUrl !== undefined
+          ? { linkUrl: body.linkUrl ? String(body.linkUrl).trim() : null }
+          : {}),
+        ...(body.imageUrl !== undefined
+          ? { imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null }
+          : {}),
+        ...(body.graphVersion !== undefined ? { graphVersion: nextGraphVersion } : {}),
+        ...(body.scheduledAt !== undefined ? { scheduledAt: nextScheduledAt } : {}),
+        ...(body.publishNow === false
+          ? { status: nextScheduledAt ? 'SCHEDULED' : 'DRAFT', lastError: null }
+          : {}),
+        updatedDate: new Date()
+      }
+    });
+
+    if (body.publishNow === false) return maskFacebookToken(item);
+    return this.publishFacebookPostItem(item);
+  }
+
+  async deleteFacebookPost(id: string) {
+    const item = await this.prisma.facebookPost.findUnique({ where: { id } });
+    if (!item || item.delFlag) throw new BadRequestException('Facebook post not found');
+    if (item.facebookPostId && item.pageAccessToken) {
+      try {
+        await deleteFacebookPostOnPage({
+          postId: item.facebookPostId,
+          token: item.pageAccessToken,
+          graphVersion: item.graphVersion ?? 'v20.0'
+        });
+      } catch (error) {
+        await this.prisma.facebookPost.update({
+          where: { id },
+          data: {
+            status: 'DELETE_FAILED',
+            lastError: graphErrorMessage(error),
+            updatedDate: new Date()
+          }
+        });
+        throw new BadRequestException(graphErrorMessage(error));
+      }
+    }
+    const deleted = await this.prisma.facebookPost.update({
+      where: { id },
+      data: { delFlag: 1, status: 'DELETED', updatedDate: new Date() }
+    });
+    return maskFacebookToken(deleted);
+  }
+
+  async publishDueFacebookPosts(limit = 5) {
+    const dueItems = await this.prisma.facebookPost.findMany({
+      where: {
+        delFlag: 0,
+        status: 'SCHEDULED',
+        scheduledAt: { lte: new Date() }
+      },
+      orderBy: { scheduledAt: 'asc' },
+      take: limit
+    });
+
+    for (const item of dueItems) {
+      const claimed = await this.prisma.facebookPost.updateMany({
+        where: { id: item.id, status: 'SCHEDULED', delFlag: 0 },
+        data: { status: 'PUBLISHING', updatedDate: new Date() }
+      });
+      if (!claimed.count) continue;
+      await this.publishFacebookPostItem(item);
+    }
+    return dueItems.length;
+  }
+
+  private async publishFacebookPostItem(item: {
+    id: string;
+    pageId: string;
+    pageAccessToken?: string | null;
+    message: string;
+    linkUrl?: string | null;
+    imageUrl?: string | null;
+    facebookPostId?: string | null;
+    graphVersion?: string | null;
+    publishedAt?: Date | null;
+  }) {
+    if (!item.pageAccessToken) {
+      const failed = await this.prisma.facebookPost.update({
+        where: { id: item.id },
+        data: {
+          status: 'FAILED',
+          lastError: 'Page Access Token is required to publish to Facebook',
+          updatedDate: new Date()
+        }
+      });
+      return maskFacebookToken(failed);
+    }
+
+    try {
+      const payload = {
+        token: item.pageAccessToken,
+        message: item.message,
+        linkUrl: item.linkUrl,
+        imageUrl: item.imageUrl,
+        graphVersion: item.graphVersion ?? 'v20.0'
+      };
+      const published = item.facebookPostId
+        ? await updateFacebookPostOnPage({ postId: item.facebookPostId, ...payload })
+        : await publishFacebookPost({ pageId: item.pageId, ...payload });
+      const updated = await this.prisma.facebookPost.update({
+        where: { id: item.id },
+        data: {
+          facebookPostId: item.facebookPostId ?? published.id,
+          status: 'PUBLISHED',
+          lastError: null,
+          publishedAt: item.publishedAt ?? new Date(),
+          updatedDate: new Date()
+        }
+      });
+      return maskFacebookToken(updated);
+    } catch (error) {
+      const failed = await this.prisma.facebookPost.update({
+        where: { id: item.id },
+        data: { status: 'FAILED', lastError: graphErrorMessage(error), updatedDate: new Date() }
+      });
+      return maskFacebookToken(failed);
+    }
+  }
+
   updateContact(id: string, body: AdminContactStatusDto) {
     return this.prisma.contact.update({
       where: { id },
@@ -757,7 +971,117 @@ function normalizeIds(ids?: string[]) {
 }
 
 function normalizeJsonList(items?: unknown[]) {
-  return (items ?? [])
-    .map((item) => String(item).trim())
-    .filter(Boolean) as Prisma.InputJsonValue;
+  return (items ?? []).map((item) => String(item).trim()).filter(Boolean) as Prisma.InputJsonValue;
+}
+
+function maskFacebookToken<T extends { pageAccessToken?: string | null }>(item: T) {
+  return {
+    ...item,
+    pageAccessToken: item.pageAccessToken ? '********' : null
+  };
+}
+
+function normalizeGraphVersion(value?: string | null) {
+  const version = String(value ?? 'v20.0').trim();
+  return /^v\d+\.\d+$/.test(version) ? version : 'v20.0';
+}
+
+function parseFacebookScheduledAt(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new BadRequestException('Scheduled time is invalid');
+  if (date.getTime() <= Date.now()) {
+    throw new BadRequestException('Scheduled time must be in the future');
+  }
+  return date;
+}
+
+async function publishFacebookPost({
+  pageId,
+  token,
+  message,
+  linkUrl,
+  imageUrl,
+  graphVersion
+}: {
+  pageId: string;
+  token: string;
+  message: string;
+  linkUrl?: string | null;
+  imageUrl?: string | null;
+  graphVersion: string;
+}) {
+  const params = new URLSearchParams({ access_token: token, message });
+  const endpoint = imageUrl
+    ? `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/photos`
+    : `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(pageId)}/feed`;
+  if (imageUrl) params.set('url', imageUrl);
+  if (linkUrl && !imageUrl) params.set('link', linkUrl);
+  return graphPost<{ id: string; post_id?: string }>(endpoint, params).then((result) => ({
+    id: result.post_id ?? result.id
+  }));
+}
+
+async function updateFacebookPostOnPage({
+  postId,
+  token,
+  message,
+  linkUrl,
+  graphVersion
+}: {
+  postId: string;
+  token: string;
+  message: string;
+  linkUrl?: string | null;
+  imageUrl?: string | null;
+  graphVersion: string;
+}) {
+  const params = new URLSearchParams({ access_token: token, message });
+  if (linkUrl) params.set('link', linkUrl);
+  await graphPost<{ success?: boolean }>(
+    `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(postId)}`,
+    params
+  );
+  return { id: postId };
+}
+
+async function deleteFacebookPostOnPage({
+  postId,
+  token,
+  graphVersion
+}: {
+  postId: string;
+  token: string;
+  graphVersion: string;
+}) {
+  const params = new URLSearchParams({ access_token: token });
+  const res = await fetch(
+    `https://graph.facebook.com/${graphVersion}/${encodeURIComponent(postId)}?${params.toString()}`,
+    { method: 'DELETE' }
+  );
+  return parseGraphResponse<{ success?: boolean }>(res);
+}
+
+async function graphPost<T>(endpoint: string, params: URLSearchParams) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+  return parseGraphResponse<T>(res);
+}
+
+async function parseGraphResponse<T>(res: Response) {
+  const data = (await res.json().catch(() => null)) as
+    | (T & { error?: { message?: string; code?: number; type?: string } })
+    | null;
+  if (!res.ok || data?.error) {
+    const message = data?.error?.message ?? `Facebook Graph API error ${res.status}`;
+    throw new Error(message);
+  }
+  return data as T;
+}
+
+function graphErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Facebook Graph API error';
 }

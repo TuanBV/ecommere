@@ -9,6 +9,7 @@ import { ProductsView } from './products/products-view';
 import { OrdersView } from './orders/orders-view';
 import { MediaView } from './media/media-view';
 import { NewsView } from './news/news-view';
+import { FacebookPostsView } from './facebook-posts/facebook-posts-view';
 import { PoliciesView } from './policies/policies-view';
 import { ContactsView } from './contacts/contacts-view';
 import { UsersView } from './users/users-view';
@@ -96,6 +97,10 @@ export function AdminPanel({ view = 'dashboard' }: { view?: Tab }) {
 
         {view === 'news' ? <NewsView token={token} onUnauthorized={logout} /> : null}
 
+        {view === 'facebook-posts' ? (
+          <FacebookPostsView token={token} onUnauthorized={logout} />
+        ) : null}
+
         {view === 'policies' ? <PoliciesView token={token} onUnauthorized={logout} /> : null}
 
         {view === 'contacts' ? <ContactsView token={token} onUnauthorized={logout} /> : null}
@@ -175,6 +180,9 @@ function getPageTitle(view: Tab) {
 
     case 'news':
       return 'Tin tức';
+
+    case 'facebook-posts':
+      return 'Facebook';
 
     case 'policies':
       return 'Chính sách';

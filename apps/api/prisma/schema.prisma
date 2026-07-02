@@ -83,6 +83,30 @@ model Contact {
   @@map("contact")
 }
 
+model FacebookPost {
+  id              String    @id @db.VarChar(36)
+  pageId          String    @map("page_id") @db.VarChar(100)
+  pageName        String?   @map("page_name") @db.VarChar(255)
+  pageAccessToken String?   @map("page_access_token") @db.LongText
+  message         String    @db.Text
+  linkUrl         String?   @map("link_url") @db.VarChar(1000)
+  imageUrl        String?   @map("image_url") @db.VarChar(1000)
+  facebookPostId  String?   @map("facebook_post_id") @db.VarChar(255)
+  graphVersion    String?   @default("v20.0") @map("graph_version") @db.VarChar(20)
+  status          String?   @default("DRAFT") @db.VarChar(30)
+  lastError       String?   @map("last_error") @db.Text
+  scheduledAt     DateTime? @map("scheduled_at") @db.Timestamp(6)
+  publishedAt     DateTime? @map("published_at") @db.Timestamp(6)
+  delFlag         Int?      @default(0) @map("del_flag")
+  createdDate     DateTime? @map("created_date") @db.Timestamp(6)
+  updatedDate     DateTime? @map("updated_date") @db.Timestamp(6)
+
+  @@index([pageId], map: "idx_facebook_post_page")
+  @@index([status], map: "idx_facebook_post_status")
+  @@index([scheduledAt], map: "idx_facebook_post_scheduled")
+  @@map("facebook_post")
+}
+
 model News {
   id          String    @id @db.VarChar(36)
   version     Int?      @default(0)

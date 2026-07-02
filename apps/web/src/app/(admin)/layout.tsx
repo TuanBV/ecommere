@@ -12,6 +12,7 @@ import {
   Newspaper,
   Package,
   Presentation,
+  Send,
   Settings,
   Shield,
   ShieldCheck,
@@ -101,6 +102,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </AdminLink>
           <AdminLink href="/admin/news" icon={<Newspaper size={18} />} pathname={pathname}>
             Tin tức
+          </AdminLink>
+          <AdminLink href="/admin/facebook-posts" icon={<Send size={18} />} pathname={pathname}>
+            Facebook
           </AdminLink>
           <AdminLink href="/admin/policies" icon={<ShieldCheck size={18} />} pathname={pathname}>
             Chính sách

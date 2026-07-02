@@ -50,7 +50,8 @@ export class CheckoutRepository {
           where: { id: detail.product.id, stockQty: { gte: detail.quantity } },
           data: { stockQty: { decrement: detail.quantity } }
         });
-        if (updated.count !== 1) throw new BadRequestException(`Stock changed for ${detail.product.title}`);
+        if (updated.count !== 1)
+          throw new BadRequestException(`Stock changed for ${detail.product.title}`);
         await tx.orderDetail.create({
           data: {
             id: randomUUID(),

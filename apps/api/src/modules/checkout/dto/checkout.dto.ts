@@ -1,5 +1,13 @@
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsEmail, IsInt, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsEmail,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested
+} from 'class-validator';
 
 export class CheckoutItemDto {
   @IsString()

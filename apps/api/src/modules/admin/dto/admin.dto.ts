@@ -184,6 +184,45 @@ export class AdminNewsDto {
 
 export class UpdateAdminNewsDto extends PartialType(AdminNewsDto) {}
 
+export class AdminFacebookPostDto {
+  @IsString()
+  pageId!: string;
+
+  @IsOptional()
+  @IsString()
+  pageName?: string;
+
+  @IsOptional()
+  @IsString()
+  pageAccessToken?: string;
+
+  @IsString()
+  message!: string;
+
+  @IsOptional()
+  @IsString()
+  linkUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  graphVersion = 'v20.0';
+
+  @IsOptional()
+  @IsString()
+  scheduledAt?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  publishNow = true;
+}
+
+export class UpdateAdminFacebookPostDto extends PartialType(AdminFacebookPostDto) {}
+
 export class AdminTaxonomyDto {
   @IsString()
   title!: string;

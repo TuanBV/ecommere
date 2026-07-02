@@ -25,6 +25,7 @@ import { AdminService } from './admin.service';
 import {
   AdminBannerDto,
   AdminContactStatusDto,
+  AdminFacebookPostDto,
   AdminOrderStatusDto,
   AdminNewsDto,
   AdminPolicyDto,
@@ -34,13 +35,14 @@ import {
   AdminTaxonomyDto,
   AdminUserDto,
   UpdateAdminBannerDto,
+  UpdateAdminFacebookPostDto,
   UpdateAdminNewsDto,
   UpdateAdminPolicyDto,
   UpdateAdminProductDto,
   UpdateAdminSliderDto,
   UpdateAdminTaxonomyDto,
   UpdateAdminUserDto,
-  UpdateAdminUserPasswordDto,
+  UpdateAdminUserPasswordDto
 } from './dto/admin.dto';
 
 @ApiTags('admin')
@@ -225,6 +227,26 @@ export class AdminController {
   @Delete('news/:id')
   async deleteNews(@Param('id') id: string) {
     return ok(await this.admin.softDeleteNews(id));
+  }
+
+  @Get('facebook-posts')
+  async facebookPosts() {
+    return ok(await this.admin.facebookPosts());
+  }
+
+  @Post('facebook-posts')
+  async createFacebookPost(@Body() body: AdminFacebookPostDto) {
+    return ok(await this.admin.createFacebookPost(body));
+  }
+
+  @Patch('facebook-posts/:id')
+  async updateFacebookPost(@Param('id') id: string, @Body() body: UpdateAdminFacebookPostDto) {
+    return ok(await this.admin.updateFacebookPost(id, body));
+  }
+
+  @Delete('facebook-posts/:id')
+  async deleteFacebookPost(@Param('id') id: string) {
+    return ok(await this.admin.deleteFacebookPost(id));
   }
 
   @Get('policies')
