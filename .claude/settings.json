@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read(./**)",
+      "Grep(./**)",
+      "Glob(./**)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git branch)",
+      "Bash(git branch *)",
+      "Bash(git show *)",
+      "Bash(git rev-parse *)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint *)",
+      "Bash(npm run build)",
+      "Bash(npm run build *)",
+      "Bash(npm run dev)",
+      "Bash(npm run dev *)",
+      "Bash(npm run prisma:generate)",
+      "Bash(npm run format *)",
+      "Bash(npm test *)",
+      "Bash(npm audit)",
+      "Bash(npm audit *)",
+      "Bash(bash .claude/hooks/*.sh *)",
+      "Bash(bash .claude/hooks/*.sh)",
+      "Bash(jq empty *)",
+      "Bash(bash -n *)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm ci *)",
+      "Bash(npm uninstall *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git checkout *)",
+      "Bash(git tag *)",
+      "Bash(docker *)",
+      "Bash(docker compose *)",
+      "Bash(prisma migrate *)",
+      "Bash(npx prisma migrate *)",
+      "Bash(sh scripts/deploy-vps.sh)",
+      "Bash(sh scripts/restore-db.sh)",
+      "Bash(sh scripts/check-db.sh)",
+      "Bash(systemctl *)",
+      "Bash(service *)",
+      "Bash(nginx *)",
+      "Bash(mariadb *)",
+      "Bash(mysql *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/id_rsa*)",
+      "Read(./**/credentials.json)",
+      "Read(./**/.npmrc)",
+
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./**/.env)",
+      "Edit(./**/.env.*)",
+      "Edit(./secrets/**)",
+      "Edit(./**/secrets/**)",
+      "Edit(./**/*.pem)",
+      "Edit(./**/*.key)",
+      "Edit(./**/id_rsa*)",
+      "Edit(./**/credentials.json)",
+
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Write(./**/.env)",
+      "Write(./**/.env.*)",
+
+      "Bash(rm -rf *)",
+      "Bash(rm -fr *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean -fdx *)",
+      "Bash(git clean -fxd *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(docker compose down -v)",
+      "Bash(docker compose down --volumes)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)",
+      "Bash(chmod 777 *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/block-dangerous-bash.sh" },
+          { "type": "command", "command": "bash .claude/hooks/block-main-master-commit.sh" },
+          { "type": "command", "command": "bash .claude/hooks/block-ai-attribution-commit-msg.sh" }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/protect-sensitive-files.sh" }
+        ]
+      }
+    ]
+  }
+}
