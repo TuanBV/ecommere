@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, ShoppingCart, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ResponsiveImage } from '@/components/responsive-image';
 import { Product } from '@/lib/api';
 import { useCart } from '@/store/cart';
@@ -14,10 +14,48 @@ type ProductImage = {
 
 export function ProductGallery({ images, title }: { images: ProductImage[]; title: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const thumbnailTrackRef = useRef<HTMLDivElement>(null);
+  const dragState = useRef({ startX: 0, scrollLeft: 0, moved: false });
+  const slideSwipeState = useRef({ startX: 0, startY: 0 });
 
   const galleryImages = useMemo(() => images.filter((image) => image.imageUrl), [images]);
 
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0];
+
+  useEffect(() => {
+    const track = thumbnailTrackRef.current;
+    const thumbnail = track?.children[activeIndex] as HTMLElement | undefined;
+    if (!track || !thumbnail) return;
+
+    const left = thumbnail.offsetLeft;
+    const right = left + thumbnail.offsetWidth;
+    if (left < track.scrollLeft) track.scrollTo({ left, behavior: 'smooth' });
+    if (right > track.scrollLeft + track.clientWidth) {
+      track.scrollTo({ left: right - track.clientWidth, behavior: 'smooth' });
+    }
+  }, [activeIndex]);
+
+  function startThumbnailDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === 'touch') return;
+    const track = thumbnailTrackRef.current;
+    if (!track) return;
+
+    dragState.current = {
+      startX: event.clientX,
+      scrollLeft: track.scrollLeft,
+      moved: false
+    };
+    track.setPointerCapture(event.pointerId);
+  }
+
+  function dragThumbnails(event: React.PointerEvent<HTMLDivElement>) {
+    const track = thumbnailTrackRef.current;
+    if (!track || !track.hasPointerCapture(event.pointerId)) return;
+
+    const distance = event.clientX - dragState.current.startX;
+    if (Math.abs(distance) > 4) dragState.current.moved = true;
+    track.scrollLeft = dragState.current.scrollLeft - distance;
+  }
 
   function prev() {
     setActiveIndex((current) => (current === 0 ? galleryImages.length - 1 : current - 1));
@@ -27,13 +65,41 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
     setActiveIndex((current) => (current === galleryImages.length - 1 ? 0 : current + 1));
   }
 
+  function startSlideSwipe(event: React.PointerEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest('button')) return;
+
+    slideSwipeState.current = { startX: event.clientX, startY: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function finishSlideSwipe(event: React.PointerEvent<HTMLDivElement>) {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+
+    const distanceX = event.clientX - slideSwipeState.current.startX;
+    const distanceY = event.clientY - slideSwipeState.current.startY;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+
+    if (Math.abs(distanceX) < 50 || Math.abs(distanceX) <= Math.abs(distanceY)) return;
+    if (distanceX < 0) next();
+    else prev();
+  }
+
   if (!activeImage) {
     return <div className="aspect-square rounded-xl bg-gray-50" />;
   }
 
   return (
     <div className="sticky top-[132px] md:top-[176px] lg:top-[128px]">
-      <div className="group relative mb-6 aspect-square cursor-zoom-in overflow-hidden rounded-xl bg-white">
+      <div
+        onPointerDown={startSlideSwipe}
+        onPointerUp={finishSlideSwipe}
+        onPointerCancel={(event) => {
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+        }}
+        className="group relative mb-6 aspect-square touch-pan-y cursor-grab overflow-hidden rounded-xl bg-white active:cursor-grabbing"
+      >
         <ResponsiveImage
           src={activeImage.imageUrl}
           alt={`Ảnh sản phẩm ${title}`}
@@ -67,16 +133,26 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
       </div>
 
       {galleryImages.length > 1 ? (
-        <div className="relative px-2">
-          <div className="grid grid-cols-4 gap-2 md:grid-cols-5">
-            {galleryImages.slice(0, 10).map((image, index) => (
+        <div className="relative">
+          <div
+            ref={thumbnailTrackRef}
+            role="list"
+            aria-label="Danh sach anh san pham"
+            onPointerDown={startThumbnailDrag}
+            onPointerMove={dragThumbnails}
+            className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {galleryImages.map((image, index) => (
               <button
                 key={image.id}
                 type="button"
-                onClick={() => setActiveIndex(index)}
+                onClick={() => {
+                  if (!dragState.current.moved) setActiveIndex(index);
+                  dragState.current.moved = false;
+                }}
                 aria-label={`Xem ảnh sản phẩm ${index + 1}`}
                 className={[
-                  'aspect-square overflow-hidden rounded-xl border-2 bg-gray-50 transition-all',
+                  'aspect-square w-[calc((100%_-_2rem)/5)] shrink-0 snap-start overflow-hidden rounded-xl border-2 bg-gray-50 transition-all',
                   activeIndex === index
                     ? 'border-blue-500 opacity-100'
                     : 'border-transparent opacity-60 hover:border-blue-500 hover:opacity-100'

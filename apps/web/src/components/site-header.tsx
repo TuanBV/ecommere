@@ -38,6 +38,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   const [desktopExpandedCategoryIds, setDesktopExpandedCategoryIds] = useState<string[]>([]);
   const [activeCategorySlug, setActiveCategorySlug] = useState('');
   const [activeBrandSlug, setActiveBrandSlug] = useState('');
+  const [desktopMenuCategoryIds, setDesktopMenuCategoryIds] = useState<string[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const items = useCart((state) => state.items);
@@ -50,6 +51,15 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   );
 
   const menuCategories = categories.length ? categories : defaultCategories;
+
+  const desktopMenuCategories = useMemo(() => {
+    if (!desktopMenuCategoryIds.length) return menuCategories.slice(0, 6);
+
+    const categoriesById = new Map(menuCategories.map((category) => [category.id, category]));
+    return desktopMenuCategoryIds
+      .map((categoryId) => categoriesById.get(categoryId))
+      .filter((category): category is Category => Boolean(category));
+  }, [desktopMenuCategoryIds, menuCategories]);
 
   const activeCategoryIds = useMemo(
     () =>
@@ -86,6 +96,22 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
   useEffect(() => {
     syncActiveFiltersFromLocation();
   }, []);
+
+  useEffect(() => {
+    const shuffledCategories = [...menuCategories];
+    for (let index = shuffledCategories.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffledCategories[index], shuffledCategories[randomIndex]] = [
+        shuffledCategories[randomIndex],
+        shuffledCategories[index]
+      ];
+    }
+
+    const visibleCount = Math.min(shuffledCategories.length, Math.random() < 0.5 ? 5 : 6);
+    setDesktopMenuCategoryIds(
+      shuffledCategories.slice(0, visibleCount).map((category) => category.id)
+    );
+  }, [menuCategories]);
 
   useEffect(() => {
     if (open) {
@@ -382,7 +408,7 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
             <div className="container flex h-[48px] items-center">
               <button
                 type="button"
-                className="flex h-[48px] cursor-pointer items-center px-5 transition-colors hover:bg-blue-100"
+                className="flex h-[48px] shrink-0 cursor-pointer items-center whitespace-nowrap px-5 transition-colors hover:bg-blue-100"
                 onClick={() => setOpen(true)}
               >
                 <Menu size={24} className="mr-3 text-gray-700" />
@@ -393,9 +419,9 @@ export function SiteHeader({ categories = [] }: { categories?: Category[] }) {
 
               <nav
                 aria-label="Danh muc san pham"
-                className="ml-4 flex h-full flex-1 items-center overflow-visible whitespace-nowrap text-[15px] font-medium"
+                className="ml-4 flex h-full min-w-0 flex-1 items-center overflow-hidden whitespace-nowrap text-[15px] font-medium"
               >
-                {menuCategories.map((cat) => (
+                {desktopMenuCategories.map((cat) => (
                   <div key={cat.id} className="relative flex h-full items-center">
                     <Link
                       href={`/san-pham?danh-muc=${cat.slug ?? ''}`}
