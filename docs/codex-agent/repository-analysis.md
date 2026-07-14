@@ -37,11 +37,10 @@ the Agent Kit therefore adds no deployment behavior.
 
 ## Git strategy and CI/CD
 
-The checked-out/default remote branch is `main`; no `develop` ref exists. Existing commits use
-short imperative messages. No `.github/workflows` existed at audit time. The kit defaults to the
-repository variable `CODEX_BASE_BRANCH`, then an existing `develop`, then the GitHub default branch.
-Agent branches are stable per Issue: `codex/issue-<number>-<slug>`. Draft PRs require human review;
-no automation merges.
+The protected branch model is `main` (production), `staging`, and `develop`. Work branches follow
+`feature|bugfix|refactor|hotfix/<issue>-<slug>`; Issue type labels select the prefix. Commits and PR
+titles use Conventional Commits. Feature, bugfix, and refactor PRs target `develop`; hotfix PRs
+target `main`. Draft PRs require human review and no automation merges.
 
 ## Security-sensitive areas
 

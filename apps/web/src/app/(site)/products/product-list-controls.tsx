@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
-import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 type CategoryBrand = {
   id: string;
@@ -34,9 +35,11 @@ export function ProductListControls({
   categories: Category[];
   values: FilterValues;
 }) {
+  const router = useRouter();
   const [formValues, setFormValues] = useState(values);
   const [selectedCategory, setSelectedCategory] = useState(values.category);
   const [selectedBrand, setSelectedBrand] = useState(values.brand);
+  const filterTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setFormValues(values);
@@ -78,23 +81,53 @@ export function ProductListControls({
     return [...unique.values()].sort((a, b) => a.title.localeCompare(b.title, 'vi'));
   }, [categories, selectedCategory]);
 
-  function submitFilters(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(
+    () => () => {
+      if (filterTimeout.current) clearTimeout(filterTimeout.current);
+    },
+    []
+  );
 
-    const formData = new FormData(event.currentTarget);
+  function applyFilters(nextValues: FilterValues) {
+    if (filterTimeout.current) clearTimeout(filterTimeout.current);
+
     const params = new URLSearchParams();
+    const entries: [string, string][] = [
+      ['q', nextValues.q],
+      ['danh-muc', nextValues.category],
+      ['thuong-hieu', nextValues.brand],
+      ['minPrice', nextValues.minPrice],
+      ['maxPrice', nextValues.maxPrice],
+      ['sort', nextValues.sort]
+    ];
 
-    for (const key of ['q', 'danh-muc', 'thuong-hieu', 'minPrice', 'maxPrice', 'sort']) {
-      const value = String(formData.get(key) ?? '').trim();
-      if (!value) continue;
-      if (key === 'sort' && value === 'newest') continue;
+    for (const [key, rawValue] of entries) {
+      const value = rawValue.trim();
+      if (!value || (key === 'sort' && value === 'newest')) continue;
       params.set(key, value);
     }
 
-    if (formData.get('inStock') === 'true') params.set('inStock', 'true');
+    if (nextValues.inStock === 'true') params.set('inStock', 'true');
 
     const query = params.toString();
-    window.location.href = query ? `/san-pham?${query}` : '/san-pham';
+    router.replace(query ? `/san-pham?${query}` : '/san-pham', { scroll: false });
+  }
+
+  function updateFilters(nextValues: FilterValues, immediate = false) {
+    setFormValues(nextValues);
+
+    if (filterTimeout.current) clearTimeout(filterTimeout.current);
+    if (immediate) {
+      applyFilters(nextValues);
+      return;
+    }
+
+    filterTimeout.current = setTimeout(() => applyFilters(nextValues), 400);
+  }
+
+  function submitFilters(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    applyFilters(formValues);
   }
 
   return (
@@ -110,9 +143,7 @@ export function ProductListControls({
               <input
                 name="q"
                 value={formValues.q}
-                onChange={(event) =>
-                  setFormValues((current) => ({ ...current, q: event.target.value }))
-                }
+                onChange={(event) => updateFilters({ ...formValues, q: event.target.value })}
                 placeholder="Tên sản phẩm..."
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 pr-10 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -130,7 +161,7 @@ export function ProductListControls({
               value={selectedCategory}
               onChange={(event) => {
                 const category = event.target.value;
-                setFormValues((current) => ({ ...current, category, brand: '' }));
+                updateFilters({ ...formValues, category, brand: '' }, true);
                 setSelectedCategory(category);
                 setSelectedBrand('');
               }}
@@ -151,8 +182,9 @@ export function ProductListControls({
               name="thuong-hieu"
               value={selectedBrand}
               onChange={(event) => {
-                setFormValues((current) => ({ ...current, brand: event.target.value }));
-                setSelectedBrand(event.target.value);
+                const brand = event.target.value;
+                updateFilters({ ...formValues, brand }, true);
+                setSelectedBrand(brand);
               }}
               className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
@@ -173,9 +205,7 @@ export function ProductListControls({
                 type="number"
                 min="0"
                 value={formValues.minPrice}
-                onChange={(event) =>
-                  setFormValues((current) => ({ ...current, minPrice: event.target.value }))
-                }
+                onChange={(event) => updateFilters({ ...formValues, minPrice: event.target.value })}
                 placeholder="Từ"
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -185,9 +215,7 @@ export function ProductListControls({
                 type="number"
                 min="0"
                 value={formValues.maxPrice}
-                onChange={(event) =>
-                  setFormValues((current) => ({ ...current, maxPrice: event.target.value }))
-                }
+                onChange={(event) => updateFilters({ ...formValues, maxPrice: event.target.value })}
                 placeholder="Đến"
                 className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               />
@@ -215,9 +243,7 @@ export function ProductListControls({
             <select
               name="sort"
               value={formValues.sort || 'newest'}
-              onChange={(event) =>
-                setFormValues((current) => ({ ...current, sort: event.target.value }))
-              }
+              onChange={(event) => updateFilters({ ...formValues, sort: event.target.value }, true)}
               className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             >
               <option value="newest">Mới nhất</option>
@@ -234,10 +260,7 @@ export function ProductListControls({
               value="true"
               checked={formValues.inStock === 'true'}
               onChange={(event) =>
-                setFormValues((current) => ({
-                  ...current,
-                  inStock: event.target.checked ? 'true' : ''
-                }))
+                updateFilters({ ...formValues, inStock: event.target.checked ? 'true' : '' }, true)
               }
               className="h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600"
             />

@@ -9,7 +9,7 @@
 | Branch exists, no PR | Validate branch contents, rerun; deterministic PR script creates a Draft from the existing branch. |
 | Issue edited mid-run | Cancel if scope changed materially; rerun to create fresh context. Review `updated_at` in the artifact. |
 | Base branch changed | Cancel, resolve the intended base variable, handle conflicts manually, and rerun without force push. |
-| Merge conflict | Human rebases/merges safely on the Issue branch; automation does not rewrite remote history. |
+| Merge conflict | On the work branch, merge the PR target branch into it, resolve with full context, rerun affected checks, and push normally. Never rebase published history or force-push. |
 | API key expired | Rotate `OPENAI_API_KEY`, cancel failed runs, and retry. Never paste the key into logs or Issues. |
 | GitHub rate limit | Wait for reset, reduce retries, or use a narrowly permissioned GitHub App installation token. |
 | Invalid output JSON | Keep `codex-failed`, inspect the sanitized final output, correct prompt/schema incompatibility under an automation-approved Issue, retry. |

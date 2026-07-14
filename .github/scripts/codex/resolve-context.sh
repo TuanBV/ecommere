@@ -22,6 +22,17 @@ output, number, variable_base, input_base = sys.argv[3:]
 labels = sorted(x["name"] for x in issue.get("labels", []))
 base = input_base or variable_base or repo["default_branch"]
 slug = re.sub(r"[^a-z0-9]+", "-", issue.get("title", "").lower()).strip("-")[:48].strip("-") or "task"
+normalized_labels = {x.lower() for x in labels}
+if normalized_labels & {"hotfix", "type:hotfix"}:
+    branch_type = "hotfix"
+elif normalized_labels & {"bug", "bugfix", "type:bug", "type:bugfix"}:
+    branch_type = "bugfix"
+elif normalized_labels & {"refactor", "type:refactor"}:
+    branch_type = "refactor"
+else:
+    branch_type = "feature"
+if not input_base and not variable_base:
+    base = repo["default_branch"] if branch_type == "hotfix" else "develop"
 data = {
   "repository": repo["full_name"], "repository_id": repo["id"],
   "default_branch": repo["default_branch"], "issue_number": int(number),
@@ -30,7 +41,8 @@ data = {
   "body": issue.get("body") or "", "author": issue["user"]["login"],
   "author_association": issue.get("author_association", "NONE"), "labels": labels,
   "updated_at": issue["updated_at"], "base_branch": base,
-  "working_branch": f"codex/issue-{number}-{slug}"
+  "branch_type": branch_type,
+  "working_branch": f"{branch_type}/{number}-{slug}"
 }
 with open(output, "w", encoding="utf-8", newline="\n") as f:
     json.dump(data, f, ensure_ascii=False, indent=2); f.write("\n")

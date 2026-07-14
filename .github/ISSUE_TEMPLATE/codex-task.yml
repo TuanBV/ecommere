@@ -8,6 +8,8 @@ body:
       value: |
         Không dán secret, thông tin xác thực production, dữ liệu cá nhân thật hoặc khóa riêng tư.
         Tiêu chí chấp nhận phải xác minh được. Thêm `codex-ready` chỉ cho phép phân loại, không cho phép merge.
+        Trước khi chạy automation, gắn đúng một label loại branch: `type:feature`, `type:bug`,
+        `type:refactor` hoặc `type:hotfix`.
   - type: dropdown
     id: task_type
     attributes:

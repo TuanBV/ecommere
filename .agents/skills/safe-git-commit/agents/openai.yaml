@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Git Commit"
+  short_description: "Commit task changes with guarded Git checks"
+  default_prompt: "Use $safe-git-commit to verify and commit only the completed task changes."

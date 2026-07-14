@@ -23,3 +23,11 @@ For new modules, retain nested `AGENTS.md` only when rules differ materially; av
 Changes to prompts, schema, workflows, rules, agents, skills, or deterministic scripts are
 control-plane changes. Test them through an Issue explicitly naming those paths with
 `codex-automation-approved` and require security review plus CODEOWNER approval.
+
+After implementation and all required reviews pass, use `$safe-git-commit` for a scoped local commit.
+The skill refuses protected branches and never pushes; reviewed workflow scripts remain the only
+write path to GitHub.
+
+Git Flow uses `main`, `staging`, and `develop` as protected branches. Apply an Issue type label
+(`type:hotfix`, `type:bug`, `type:refactor`, or `type:feature`) before automation runs; the
+deterministic resolver maps it to `hotfix/`, `bugfix/`, `refactor/`, or `feature/`.

@@ -24,13 +24,15 @@ trusted actor + codex-ready/manual dispatch
 ```
 
 Artifacts cross permission boundaries and are treated as untrusted until revalidated. Concurrency is
-per repository/Issue; reruns reuse `codex/issue-<number>-<slug>` and the open PR for that head.
+per repository/Issue; reruns reuse `feature|bugfix|refactor|hotfix/<number>-<slug>` and the open PR
+for that head.
 
 ## Base and branch resolution
 
 Manual `base_branch` wins, followed by repository variable `CODEX_BASE_BRANCH`, an existing remote
-`develop`, then the GitHub default branch. Branch names are generated only from Issue number and a
-sanitized title slug. Push is never forced; an existing Issue branch is checked out and extended.
+`develop`, then the GitHub default branch. Hotfixes use `main`; other Issue work uses `develop`.
+Branch type comes from trusted Issue labels and the name uses only the Issue number and a sanitized
+title slug. Push is never forced; an existing Issue branch is checked out and extended.
 
 ## Pull request review
 

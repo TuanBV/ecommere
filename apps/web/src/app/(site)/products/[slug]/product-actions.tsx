@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, ShoppingCart, Zap } from 'lucide-react';
+import { Calculator, ChevronLeft, ChevronRight, ShoppingCart, X, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ResponsiveImage } from '@/components/responsive-image';
@@ -55,6 +55,17 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
     const distance = event.clientX - dragState.current.startX;
     if (Math.abs(distance) > 4) dragState.current.moved = true;
     track.scrollLeft = dragState.current.scrollLeft - distance;
+  }
+
+  function finishThumbnailDrag(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function cancelThumbnailDrag(event: React.PointerEvent<HTMLDivElement>) {
+    finishThumbnailDrag(event);
+    dragState.current.moved = false;
   }
 
   function prev() {
@@ -140,16 +151,22 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
             aria-label="Danh sach anh san pham"
             onPointerDown={startThumbnailDrag}
             onPointerMove={dragThumbnails}
+            onPointerUp={finishThumbnailDrag}
+            onPointerCancel={cancelThumbnailDrag}
+            onClickCapture={(event) => {
+              if (!dragState.current.moved) return;
+
+              event.preventDefault();
+              event.stopPropagation();
+              dragState.current.moved = false;
+            }}
             className="flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 cursor-grab active:cursor-grabbing [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {galleryImages.map((image, index) => (
               <button
                 key={image.id}
                 type="button"
-                onClick={() => {
-                  if (!dragState.current.moved) setActiveIndex(index);
-                  dragState.current.moved = false;
-                }}
+                onClick={() => setActiveIndex(index)}
                 aria-label={`Xem ảnh sản phẩm ${index + 1}`}
                 className={[
                   'aspect-square w-[calc((100%_-_2rem)/5)] shrink-0 snap-start overflow-hidden rounded-xl border-2 bg-gray-50 transition-all',
@@ -180,8 +197,19 @@ export function ProductActions({ product, price }: { product: Product; price: nu
   const add = useCart((state) => state.add);
   const buyNowProduct = useCart((state) => state.buyNow);
   const [quantity, setQuantity] = useState(1);
+  const [showInstallment, setShowInstallment] = useState(false);
+  const [installmentTerm, setInstallmentTerm] = useState(6);
+  const [downPayment, setDownPayment] = useState(0);
 
   const disabled = product.stockQty <= 0;
+  const installmentTotal = price * quantity;
+  const installmentEligible = !disabled && installmentTotal >= 3_000_000;
+  const minimumDownPayment = Math.ceil(installmentTotal * 0.2);
+  const validDownPayment =
+    Number.isInteger(downPayment) &&
+    downPayment >= minimumDownPayment &&
+    downPayment <= installmentTotal;
+  const monthlyAmount = Math.max(0, installmentTotal - downPayment) / installmentTerm;
 
   function cartItem() {
     return {
@@ -206,6 +234,25 @@ export function ProductActions({ product, price }: { product: Product; price: nu
 
     if (buyNowProduct(cartItem())) {
       router.push('/checkout');
+    }
+  }
+
+  function openInstallment() {
+    if (!installmentEligible) return;
+    setDownPayment(minimumDownPayment);
+    setShowInstallment(true);
+  }
+
+  function startInstallmentCheckout() {
+    if (!validDownPayment) return;
+
+    if (buyNowProduct(cartItem())) {
+      const params = new URLSearchParams({
+        payment: 'installment',
+        term: String(installmentTerm),
+        downPayment: String(downPayment)
+      });
+      router.push(`/checkout?${params.toString()}`);
     }
   }
 
@@ -280,7 +327,117 @@ export function ProductActions({ product, price }: { product: Product; price: nu
             GIỎ HÀNG
           </span>
         </button>
+
+        {installmentEligible ? (
+          <button
+            type="button"
+            onClick={openInstallment}
+            className="flex-1 rounded-xl border-2 border-blue-600 bg-white py-5 text-base font-semibold text-blue-700 transition hover:bg-blue-50 active:scale-[0.96]"
+          >
+            <span className="flex items-center justify-center gap-2">
+              <Calculator size={22} />
+              MUA TRẢ GÓP
+            </span>
+          </button>
+        ) : null}
       </div>
+
+      {showInstallment ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="installment-title"
+          className="fixed inset-0 z-[1000] grid place-items-center bg-slate-900/60 p-4 backdrop-blur-sm"
+        >
+          <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:p-8">
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="installment-title" className="text-2xl font-semibold text-gray-900">
+                  Chọn phương án trả góp
+                </h2>
+                <p className="mt-1 text-base text-gray-600">Lãi suất và phí: 0%</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInstallment(false)}
+                aria-label="Đóng"
+                className="grid h-11 w-11 place-items-center rounded-full bg-gray-100 text-gray-700"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div className="rounded-xl bg-blue-50 p-4 text-base text-gray-700">
+                <div className="flex justify-between gap-4">
+                  <span>Giá sản phẩm</span>
+                  <strong>{installmentTotal.toLocaleString('vi-VN')}₫</strong>
+                </div>
+              </div>
+
+              <fieldset>
+                <legend className="mb-2 text-base font-semibold text-gray-800">Kỳ hạn</legend>
+                <div className="grid grid-cols-4 gap-2">
+                  {[3, 6, 9, 12].map((term) => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => setInstallmentTerm(term)}
+                      className={[
+                        'h-11 rounded-xl border text-base font-semibold',
+                        installmentTerm === term
+                          ? 'border-blue-600 bg-blue-600 text-white'
+                          : 'border-gray-200 bg-white text-gray-700'
+                      ].join(' ')}
+                    >
+                      {term} tháng
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <label className="block text-base font-semibold text-gray-800">
+                Khoản trả trước
+                <input
+                  type="number"
+                  min={minimumDownPayment}
+                  max={installmentTotal}
+                  step={1000}
+                  value={downPayment}
+                  onChange={(event) => setDownPayment(Number(event.target.value))}
+                  className="mt-2 h-12 w-full rounded-xl border border-gray-200 px-4 text-base outline-none focus:border-blue-600"
+                />
+                <span className="mt-1 block text-sm font-medium text-gray-600">
+                  Tối thiểu {minimumDownPayment.toLocaleString('vi-VN')}₫ (20%)
+                </span>
+              </label>
+
+              <div className="space-y-2 rounded-xl border border-gray-200 p-4 text-base">
+                <div className="flex justify-between gap-4 text-gray-700">
+                  <span>Trả mỗi tháng</span>
+                  <strong>{Math.ceil(monthlyAmount).toLocaleString('vi-VN')}₫</strong>
+                </div>
+                <div className="flex justify-between gap-4 text-gray-700">
+                  <span>Tổng dự kiến</span>
+                  <strong>{installmentTotal.toLocaleString('vi-VN')}₫</strong>
+                </div>
+                <p className="border-t border-gray-100 pt-2 text-sm font-medium text-gray-600">
+                  Số tiền chỉ là ước tính. Nhân viên sẽ liên hệ xác nhận yêu cầu trả góp.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={startInstallmentCheckout}
+                disabled={!validDownPayment}
+                className="h-13 w-full rounded-xl bg-blue-600 px-5 py-4 text-base font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                TIẾP TỤC CHECKOUT
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

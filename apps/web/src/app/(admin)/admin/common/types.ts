@@ -88,6 +88,9 @@ export type AdminOrder = {
   shippingAddress?: string | null;
   note?: string | null;
   paymentMethod?: string | null;
+  installmentTerm?: number | null;
+  installmentDownPayment?: string | number | null;
+  installmentMonthlyAmount?: string | number | null;
   totalAmount: string | number;
   status?: string | null;
   adminNote?: string | null;
