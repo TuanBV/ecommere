@@ -1,0 +1,8 @@
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Implement only the accepted file-by-file plan with the smallest diff. Respect every AGENTS.md.
+Never perform GitHub writes, push, commit, deploy, change protected branches, read secrets, or change
+automation/control-plane unless explicit codex-automation-approved context permits named files. Do
+not add production dependencies or migrations without their approval labels. Only one implementer
+may write at a time.
+"""

@@ -1,0 +1,312 @@
+name: Codex Issue Worker
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Open Issue number
+        required: true
+        type: number
+      base_branch:
+        description: Optional base branch override
+        required: false
+        type: string
+      force_reanalyze:
+        description: Ignore prior analysis artifact
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: Analyze only; no branch, PR, label, or comment writes
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: codex-issue-${{ github.repository }}-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request == null && github.event.label.name == 'codex-ready')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: read
+    outputs:
+      issue_number: ${{ steps.vars.outputs.issue_number }}
+      base_branch: ${{ steps.context.outputs.base_branch }}
+      working_branch: ${{ steps.context.outputs.working_branch }}
+      dry_run: ${{ steps.vars.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: vars
+        env:
+          EVENT_ISSUE: ${{ github.event.issue.number }}
+          INPUT_ISSUE: ${{ inputs.issue_number }}
+          INPUT_DRY: ${{ inputs.dry_run }}
+        run: |
+          issue_number="${EVENT_ISSUE:-$INPUT_ISSUE}"
+          dry_run="${INPUT_DRY:-false}"
+          [[ "$issue_number" =~ ^[1-9][0-9]*$ ]]
+          echo "issue_number=$issue_number" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$dry_run" >> "$GITHUB_OUTPUT"
+      - name: Validate triggering actor permission
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          permission="$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$ACTOR/permission" --jq .permission)"
+          [[ "$permission" == "admin" || "$permission" == "maintain" || "$permission" == "write" ]]
+      - name: Resolve and validate context
+        id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODEX_BASE_BRANCH: ${{ vars.CODEX_BASE_BRANCH }}
+          INPUT_BASE_BRANCH: ${{ inputs.base_branch }}
+          INPUT_DRY_RUN: ${{ steps.vars.outputs.dry_run }}
+          GITHUB_EVENT_ACTION: ${{ github.event.action }}
+        run: |
+          bash .github/scripts/codex/resolve-context.sh "${{ steps.vars.outputs.issue_number }}"
+          if [[ -z "${INPUT_BASE_BRANCH:-}" && -z "${CODEX_BASE_BRANCH:-}" ]] && git ls-remote --exit-code --heads origin develop >/dev/null 2>&1; then
+            python3 - <<'PY'
+          import json
+          p='.codex-runtime/issue-context.json'; x=json.load(open(p)); x['base_branch']='develop'
+          open(p,'w').write(json.dumps(x,indent=2)+'\n')
+          PY
+          fi
+          bash .github/scripts/codex/validate-trigger.sh
+          bash .github/scripts/codex/validate-issue.sh
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          x=json.load(open('.codex-runtime/issue-context.json'))
+          print('base_branch='+x['base_branch']); print('working_branch='+x['working_branch'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-context-${{ steps.vars.outputs.issue_number }}
+          path: .codex-runtime/issue-context.json
+          retention-days: 7
+          if-no-files-found: error
+
+  mark-in-progress:
+    needs: prepare
+    if: needs.prepare.result == 'success' && needs.prepare.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/codex/update-issue-state.sh "${{ needs.prepare.outputs.issue_number }}" in_progress
+
+  codex:
+    needs: [prepare, mark-in-progress]
+    if: >-
+      always() && needs.prepare.result == 'success' &&
+      (needs.mark-in-progress.result == 'success' || needs.mark-in-progress.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    outputs:
+      status: ${{ steps.result.outputs.status }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.base_branch }}
+      - name: Reuse existing Issue branch when present
+        env:
+          BRANCH: ${{ needs.prepare.outputs.working_branch }}
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch --no-tags origin "$BRANCH:refs/remotes/origin/$BRANCH"
+            git switch --detach "origin/$BRANCH"
+          fi
+          git fetch --no-tags origin "${{ needs.prepare.outputs.base_branch }}:refs/remotes/origin/${{ needs.prepare.outputs.base_branch }}"
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-context-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - name: Install locked dependencies before network-isolated Codex
+        run: npm ci
+      - name: Run Codex Issue worker
+        id: codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/issue-worker.md
+          output-file: .codex-runtime/issue-result.json
+          output-schema-file: .github/codex/schemas/issue-result.schema.json
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+      - name: Run deterministic quality gate
+        continue-on-error: true
+        run: bash .github/scripts/codex/run-quality-gate.sh
+      - name: Validate result and create patch
+        id: result
+        run: |
+          bash .github/scripts/codex/validate-result.sh
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          print('status='+json.load(open('.codex-runtime/issue-result.json'))['status'])
+          PY
+          git diff --binary HEAD -- > .codex-runtime/change.patch
+          test -s .codex-runtime/change.patch || python3 - <<'PY'
+          import json
+          p='.codex-runtime/issue-result.json'; x=json.load(open(p))
+          if x['status']=='success': raise SystemExit('success result has empty diff')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: codex-result-${{ needs.prepare.outputs.issue_number }}
+          path: |
+            .codex-runtime/issue-result.json
+            .codex-runtime/change.patch
+            .codex-runtime/quality-gate.json
+            .codex-runtime/*.log
+          retention-days: 14
+          if-no-files-found: warn
+
+  promote:
+    needs: [prepare, codex]
+    if: >-
+      needs.codex.result == 'success' && needs.codex.outputs.status == 'success' &&
+      needs.prepare.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      issues: read
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+          ref: ${{ needs.prepare.outputs.base_branch }}
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-context-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-result-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - name: Apply, inspect, validate, commit, and push
+        id: promote
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_DRY_RUN: "false"
+          CODEX_MAX_CHANGED_FILES: ${{ vars.CODEX_MAX_CHANGED_FILES || '30' }}
+          CODEX_MAX_DIFF_LINES: ${{ vars.CODEX_MAX_DIFF_LINES || '1500' }}
+          CODEX_MAX_NEW_DEPENDENCIES: ${{ vars.CODEX_MAX_NEW_DEPENDENCIES || '0' }}
+          CODEX_ALLOWED_PATHS: ${{ vars.CODEX_ALLOWED_PATHS }}
+          CODEX_DENIED_PATHS: ${{ vars.CODEX_DENIED_PATHS }}
+        run: |
+          bash .github/scripts/codex/validate-result.sh
+          gh api "repos/$GITHUB_REPOSITORY/issues/${{ needs.prepare.outputs.issue_number }}" > .codex-runtime/current-issue.json
+          python3 - <<'PY'
+          import json
+          old=json.load(open('.codex-runtime/issue-context.json')); new=json.load(open('.codex-runtime/current-issue.json'))
+          approvals=lambda labels: sorted(x for x in labels if x.endswith('-approved'))
+          current_labels=[x['name'] for x in new.get('labels',[])]
+          if old['title'] != (new.get('title') or '') or old['body'] != (new.get('body') or '') or approvals(old['labels']) != approvals(current_labels):
+              raise SystemExit('Issue requirements or approval labels changed during run')
+          PY
+          branch="${{ needs.prepare.outputs.working_branch }}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            git fetch --no-tags origin "$branch:refs/remotes/origin/$branch"
+            git switch -C "$branch" "origin/$branch"
+          fi
+          git apply --index --check .codex-runtime/change.patch
+          git apply .codex-runtime/change.patch
+          bash .github/scripts/codex/validate-diff.sh "origin/${{ needs.prepare.outputs.base_branch }}"
+          bash .github/scripts/codex/commit-and-push.sh
+          echo "promoted=true" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: [prepare, codex, promote]
+    if: needs.promote.result == 'success' && needs.prepare.outputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-context-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-result-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - name: Create or update Draft PR and report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr_url="$(bash .github/scripts/codex/create-or-update-pr.sh "${{ needs.prepare.outputs.issue_number }}")"
+          python3 - "$pr_url" <<'PY'
+          import json,sys
+          r=json.load(open('.codex-runtime/issue-result.json'))
+          body=f"Codex opened or updated Draft PR: {sys.argv[1]}\n\n{r['summary']}\n\nQuality evidence is listed in the Draft PR. Human review and merge are required.\n"
+          open('.codex-runtime/issue-comment.md','w').write(body)
+          PY
+          bash .github/scripts/codex/update-issue-state.sh "${{ needs.prepare.outputs.issue_number }}" pr_open .codex-runtime/issue-comment.md
+
+  report-failure:
+    needs: [prepare, mark-in-progress, codex, promote, publish]
+    if: >-
+      always() && needs.prepare.outputs.issue_number != '' &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      (needs.codex.result != 'success' || needs.codex.outputs.status != 'success' ||
+      needs.promote.result == 'failure' || needs.publish.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: codex-result-${{ needs.prepare.outputs.issue_number }}
+          path: .codex-runtime
+      - name: Set terminal failure state
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          state=failed
+          if [[ -s .codex-runtime/issue-result.json ]]; then
+            status="$(python3 -c 'import json; print(json.load(open(".codex-runtime/issue-result.json"))["status"])')"
+            [[ "$status" == "blocked" || "$status" == "needs_info" ]] && state="$status"
+          fi
+          printf 'Codex run ended with status `%s`. Review the sanitized diagnostic artifact and run: %s\n' "$state" "$RUN_URL" > issue-comment.md
+          bash .github/scripts/codex/update-issue-state.sh "${{ needs.prepare.outputs.issue_number }}" "$state" issue-comment.md

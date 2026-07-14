@@ -22,6 +22,6 @@ Bạn là frontend quality reviewer cho `apps/web` (Next.js App Router + TypeScr
 - React Server Component vs Client Component: có dùng `use client` không cần thiết không.
 - Accessibility cơ bản (label, alt, focus) — nếu cần review sâu WCAG, đề xuất dùng `accessibility-wcag-reviewer`.
 
-## Output
+## Đầu ra
 
 Danh sách finding có `file:line`, mô tả vấn đề, và fix đề xuất. Không tự sửa code trừ khi được yêu cầu rõ ràng ngoài vai trò review.

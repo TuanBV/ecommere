@@ -3,7 +3,7 @@ name: performance-review
 description: Review tốc độ tải trang, resource loading, ảnh, font, cache, JS/CSS, third-party script, runtime performance. Dùng khi người dùng nói "tối ưu tốc độ", "site chạy chậm", "giảm bundle size", "performance review".
 ---
 
-# Performance Review
+# Rà soát hiệu năng
 
 Dựa trên `.claude/rules/web-quality/performance.md`.
 
@@ -20,12 +20,12 @@ Dựa trên `.claude/rules/web-quality/performance.md`.
 3. Ước lượng impact lên LCP/INP/CLS cho mỗi finding — mỗi vấn đề performance nên nêu rõ nó ảnh hưởng tới Core Web Vitals nào.
 4. Đưa ra fix cụ thể, có thể kèm code diff mẫu.
 
-## Output
+## Đầu ra
 
 ```md
-## Performance Review
+## Rà soát hiệu năng
 
-| Vấn đề | Evidence (file:line) | Ảnh hưởng CWV | Fix đề xuất |
+| Vấn đề | Bằng chứng (tệp:dòng) | Ảnh hưởng CWV | Cách sửa đề xuất |
 |---|---|---|---|
 
 ## Ưu tiên xử lý

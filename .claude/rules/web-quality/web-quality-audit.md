@@ -4,7 +4,7 @@ paths:
   - "**/*.html"
 ---
 
-# Web Quality Audit
+# Kiểm tra chất lượng web
 
 Dựa trên tinh thần Google Lighthouse (Performance, Accessibility, SEO, Best Practices) — nguồn gốc: `codex-web-quality-skills/skills/web-quality-audit/SKILL.md`.
 
@@ -24,33 +24,33 @@ Dựa trên tinh thần Google Lighthouse (Performance, Accessibility, SEO, Best
 | **Medium** | Cơ hội tối ưu performance, cải thiện SEO chưa khẩn cấp | Sửa trong sprint hiện tại |
 | **Low** | Tối ưu nhỏ, code quality, cải thiện dần | Sửa khi thuận tiện |
 
-## Output audit chuẩn
+## Đầu ra audit chuẩn
 
 ```md
-# Web Quality Audit
+# Kiểm tra chất lượng web
 
 ## Tóm tắt
 - Điểm/rủi ro tổng quan:
 - Khu vực ảnh hưởng:
 - Rủi ro production:
 
-## Critical
+## Nghiêm trọng
 | Issue | Evidence | Impact | Fix |
 |---|---|---|---|
 
-## High
+## Cao
 | Issue | Evidence | Impact | Fix |
 |---|---|---|---|
 
-## Medium
+## Trung bình
 | Issue | Evidence | Impact | Fix |
 |---|---|---|---|
 
-## Low
+## Thấp
 | Issue | Evidence | Impact | Fix |
 |---|---|---|---|
 
-## Verification
+## Xác minh
 - Commands đã chạy:
 - Kết quả:
 - Rủi ro còn lại:

@@ -1,0 +1,4 @@
+prefix_rule(pattern = ["curl"], decision = "forbidden", justification = "Do not download or exfiltrate data from Issue tasks.")
+prefix_rule(pattern = ["wget"], decision = "forbidden", justification = "Do not download or execute uncontrolled content.")
+prefix_rule(pattern = ["docker", "compose", "down", "-v"], decision = "forbidden", justification = "Database volume deletion is destructive.")
+prefix_rule(pattern = ["npm", "publish"], decision = "forbidden", justification = "Issue automation must not publish packages.")

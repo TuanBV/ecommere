@@ -1,0 +1,5 @@
+prefix_rule(pattern = ["git", "push"], decision = "forbidden", justification = "Only the reviewed deterministic promotion script may push.")
+prefix_rule(pattern = ["git", "merge"], decision = "forbidden", justification = "Human review and merge are mandatory.")
+prefix_rule(pattern = ["git", "rebase"], decision = "forbidden", justification = "Remote history must not be rewritten.")
+prefix_rule(pattern = ["git", "reset", "--hard"], decision = "forbidden", justification = "Destructive history/worktree changes are prohibited.")
+prefix_rule(pattern = ["git", "clean"], decision = "forbidden", justification = "Destructive worktree cleanup is prohibited.")

@@ -3,7 +3,7 @@ name: web-quality-audit
 description: Audit tổng thể chất lượng web theo tinh thần Google Lighthouse (Performance, Accessibility, SEO, Best Practices). Dùng khi người dùng nói "audit site", "kiểm tra performance", "kiểm tra website", "tối ưu web", "Lighthouse", "Core Web Vitals", "review web quality".
 ---
 
-# Web Quality Audit
+# Kiểm tra chất lượng web
 
 Skill orchestrate audit toàn diện cho `apps/web`, dựa trên `.claude/rules/web-quality/web-quality-audit.md` và các rule con (performance, core-web-vitals, accessibility, seo, best-practices).
 
@@ -24,33 +24,33 @@ Khi người dùng yêu cầu audit/kiểm tra tổng thể chất lượng web,
 5. Xuất báo cáo theo format chuẩn dưới đây.
 6. **Không tự ý sửa code** nếu người dùng chỉ yêu cầu audit — chỉ báo cáo và đề xuất fix cụ thể. Chỉ implement khi được yêu cầu rõ ràng bước tiếp theo.
 
-## Output format
+## Định dạng đầu ra
 
 ```md
-# Web Quality Audit
+# Kiểm tra chất lượng web
 
 ## Tóm tắt
 - Điểm/rủi ro tổng quan:
 - Khu vực ảnh hưởng:
 - Rủi ro production:
 
-## Critical
-| Issue | Evidence (file:line) | Impact | Fix |
+## Nghiêm trọng
+| Vấn đề | Bằng chứng (tệp:dòng) | Ảnh hưởng | Cách sửa |
 |---|---|---|---|
 
-## High
-| Issue | Evidence (file:line) | Impact | Fix |
+## Cao
+| Vấn đề | Bằng chứng (tệp:dòng) | Ảnh hưởng | Cách sửa |
 |---|---|---|---|
 
-## Medium
-| Issue | Evidence (file:line) | Impact | Fix |
+## Trung bình
+| Vấn đề | Bằng chứng (tệp:dòng) | Ảnh hưởng | Cách sửa |
 |---|---|---|---|
 
-## Low
-| Issue | Evidence (file:line) | Impact | Fix |
+## Thấp
+| Vấn đề | Bằng chứng (tệp:dòng) | Ảnh hưởng | Cách sửa |
 |---|---|---|---|
 
-## Verification
+## Xác minh
 - Commands đã chạy:
 - Kết quả:
 - Rủi ro còn lại:

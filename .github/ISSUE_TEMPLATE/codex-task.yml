@@ -1,0 +1,72 @@
+name: Tác vụ Codex
+description: Tác vụ có thể rà soát và triển khai bằng workflow Codex Issue.
+title: "[Codex]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Không dán secret, thông tin xác thực production, dữ liệu cá nhân thật hoặc khóa riêng tư.
+        Tiêu chí chấp nhận phải xác minh được. Thêm `codex-ready` chỉ cho phép phân loại, không cho phép merge.
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Loại tác vụ
+      options: [Lỗi, Tính năng, Tái cấu trúc, Kiểm thử, Tài liệu, Bảo mật, Bảo trì]
+    validations: { required: true }
+  - type: textarea
+    id: problem
+    attributes: { label: Mô tả vấn đề, description: Cần giải quyết vấn đề gì? }
+    validations: { required: true }
+  - type: textarea
+    id: current
+    attributes: { label: Hành vi hiện tại }
+  - type: textarea
+    id: expected
+    attributes: { label: Hành vi mong muốn }
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí chấp nhận
+      description: Mỗi dòng là một mục có thể xác minh khách quan.
+      placeholder: "- [ ] ..."
+    validations: { required: true }
+  - type: textarea
+    id: reproduction
+    attributes: { label: Các bước tái hiện, description: Chỉ dùng dữ liệu phi production đã được làm sạch. }
+  - type: textarea
+    id: modules
+    attributes: { label: Tệp hoặc module liên quan }
+  - type: textarea
+    id: out_of_scope
+    attributes: { label: Ngoài phạm vi }
+  - type: textarea
+    id: tests
+    attributes: { label: Kỳ vọng kiểm thử }
+  - type: textarea
+    id: security
+    attributes: { label: Cân nhắc về bảo mật và dữ liệu, description: Mô tả loại dữ liệu; không dán dữ liệu thật. }
+  - type: dropdown
+    id: migration
+    attributes: { label: Có cần migration không, options: ["Không", "Có", "Chưa chắc"] }
+    validations: { required: true }
+  - type: dropdown
+    id: dependency
+    attributes: { label: Có cần đổi dependency production không, options: ["Không", "Có", "Chưa chắc"] }
+    validations: { required: true }
+  - type: textarea
+    id: screenshots
+    attributes: { label: Ảnh chụp màn hình hoặc log đã làm sạch }
+  - type: textarea
+    id: context
+    attributes: { label: Ngữ cảnh bổ sung }
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Xác nhận an toàn
+      options:
+        - label: Tôi đã loại bỏ secret, thông tin xác thực production và dữ liệu cá nhân thật.
+          required: true
+        - label: Người rà soát có thể xác minh các tiêu chí chấp nhận.
+          required: true

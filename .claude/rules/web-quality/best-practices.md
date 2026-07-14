@@ -4,11 +4,11 @@ paths:
   - "apps/web/**"
 ---
 
-# Best Practices (Security & Modern Standards)
+# Thực hành tốt nhất (Bảo mật và tiêu chuẩn hiện đại)
 
 Nguồn gốc: `codex-web-quality-skills/skills/best-practices/SKILL.md`.
 
-## Security
+## Bảo mật
 
 - [ ] HTTPS everywhere ở môi trường production, không mixed content (không load resource `http://` từ trang `https://`).
 - [ ] CSP (Content-Security-Policy) cấu hình hợp lý; nếu thêm domain third-party mới vào `script-src`/`img-src`/`connect-src`, phải nêu rõ lý do.
@@ -26,7 +26,7 @@ Nguồn gốc: `codex-web-quality-skills/skills/best-practices/SKILL.md`.
 - [ ] Event listener cho `touchstart`/`wheel`/`scroll` nên là `passive: true` trừ khi cần `preventDefault`.
 - [ ] Không polyfill từ CDN bên thứ ba không kiểm soát (rủi ro supply-chain attack như vụ `polyfill.io`); nếu cần polyfill, bundle ở build time hoặc self-host.
 
-## Code quality / console
+## Chất lượng code / console
 
 - [ ] Không có console error khi chạy app ở chế độ dev/preview trước khi coi task là hoàn tất.
 - [ ] Có error handling hợp lý (try/catch ở nơi có thể lỗi thực sự — network, parsing), không nuốt lỗi im lặng.

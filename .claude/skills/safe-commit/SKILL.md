@@ -3,7 +3,7 @@ name: safe-commit
 description: Kiểm tra an toàn trước khi commit — branch, staged files, lint/format/test, commit message. Dùng khi người dùng nói "commit giúp tôi", "tạo commit", "safe commit", "chuẩn bị commit".
 ---
 
-# Safe Commit
+# Commit an toàn
 
 Dựa trên `.claude/rules/02-git-safety.md`.
 
@@ -18,12 +18,12 @@ Dựa trên `.claude/rules/02-git-safety.md`.
 7. Chỉ thực hiện `git commit` sau khi các bước trên pass. Nếu có bước fail (lint lỗi, branch sai), dừng lại và báo cáo, không commit.
 8. Không tự `git push` trừ khi được yêu cầu rõ ràng.
 
-## Output
+## Đầu ra
 
 ```md
-## Safe Commit Check
+## Commit an toàn Check
 
-| Check | Kết quả |
+| Kiểm tra | Kết quả |
 |---|---|
 | Branch hiện tại | ... (không phải main/master) |
 | Staged files hợp lệ | ... |

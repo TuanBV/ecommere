@@ -22,12 +22,12 @@ Bạn là release quality gate cho project ecommerce (npm workspaces: `apps/api`
 5. Tổng hợp kết luận: sẵn sàng deploy hay chưa, và rủi ro còn lại.
 6. **Không tự deploy.** Chỉ báo cáo, việc deploy do người dùng quyết định và thực hiện.
 
-## Output
+## Đầu ra
 
 ```md
 ## Release Quality Gate
 
-| Check | Command | Kết quả |
+| Kiểm tra | Lệnh | Kết quả |
 |---|---|---|
 
 ## Rủi ro còn lại

@@ -1,0 +1,6 @@
+prefix_rule(pattern = ["gh", "pr", "create"], decision = "forbidden", justification = "PR writes are deterministic-script only.")
+prefix_rule(pattern = ["gh", "pr", "merge"], decision = "forbidden", justification = "Agents never merge or approve PRs.")
+prefix_rule(pattern = ["gh", "issue", "edit"], decision = "forbidden", justification = "Issue writes are deterministic-script only.")
+prefix_rule(pattern = ["gh", "issue", "close"], decision = "forbidden", justification = "Issues close only through merged PRs.")
+prefix_rule(pattern = ["gh", "release"], decision = "forbidden", justification = "Issue automation never creates releases.")
+prefix_rule(pattern = ["gh", "api"], decision = "forbidden", justification = "Codex must not make direct GitHub API calls.")

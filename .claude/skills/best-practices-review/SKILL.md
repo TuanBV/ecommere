@@ -3,7 +3,7 @@ name: best-practices-review
 description: Review security/browser/code-quality best practices — HTTPS, CSP, Trusted Types, SRI, security headers, dependency vulnerability, exposed sourcemap. Dùng khi người dùng nói "security review", "best practices review", "kiểm tra bảo mật", "audit dependency".
 ---
 
-# Best Practices Review
+# Rà soát thực hành tốt nhất
 
 Dựa trên `.claude/rules/web-quality/best-practices.md` và `.claude/rules/03-security.md`.
 
@@ -21,18 +21,18 @@ Dựa trên `.claude/rules/web-quality/best-practices.md` và `.claude/rules/03-
 3. Không đọc/in nội dung secret khi kiểm tra file `.env`/config — chỉ xác nhận file đó có tồn tại/có được `.gitignore` đúng cách không.
 4. Đề xuất fix cụ thể theo mức độ nghiêm trọng.
 
-## Output
+## Đầu ra
 
 ```md
-## Best Practices / Security Review
+## Rà soát thực hành tốt nhất / Bảo mật
 
-### Critical (bảo mật)
-| Vấn đề | Evidence (file:line) | Fix |
+### Nghiêm trọng (bảo mật)
+| Vấn đề | Bằng chứng (tệp:dòng) | Cách sửa |
 |---|---|---|
 
-### Compatibility
+### Khả năng tương thích
 ...
 
-### Code quality
+### Chất lượng code
 ...
 ```

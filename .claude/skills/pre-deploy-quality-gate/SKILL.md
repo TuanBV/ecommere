@@ -3,7 +3,7 @@ name: pre-deploy-quality-gate
 description: Checklist và verification trước khi deploy — lint, typecheck, test, build, audit. Dùng khi người dùng nói "chuẩn bị deploy", "kiểm tra trước khi deploy", "pre-deploy check", "release checklist".
 ---
 
-# Pre-deploy Quality Gate
+# Cổng chất lượng trước khi deploy
 
 Dựa trên `.claude/rules/deployment/pre-deploy-quality-gate.md`.
 
@@ -21,12 +21,12 @@ Dựa trên `.claude/rules/deployment/pre-deploy-quality-gate.md`.
 6. Nếu có thay đổi UI/route công khai: tham chiếu nhanh `.claude/rules/web-quality/*.md` để chắc không phá Core Web Vitals/accessibility/SEO cơ bản.
 7. **Không tự deploy** (không chạy `docker compose up` trên production, không chạy `scripts/deploy-vps.sh`) — chỉ báo cáo pass/fail và để người dùng quyết định bước deploy.
 
-## Output
+## Đầu ra
 
 ```md
-## Pre-deploy Quality Gate
+## Cổng chất lượng trước khi deploy
 
-| Check | Command | Kết quả |
+| Kiểm tra | Lệnh | Kết quả |
 |---|---|---|
 | Lint | `npm run lint` | ... |
 | Build | `npm run build` | ... |

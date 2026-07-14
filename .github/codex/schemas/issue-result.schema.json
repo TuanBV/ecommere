@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/codex/issue-result.schema.json",
+  "title": "Codex Issue Worker Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status", "summary", "issue_number", "base_branch", "working_branch",
+    "changed_files", "acceptance_criteria", "commands_run", "tests",
+    "security_findings", "risks", "manual_verification", "pr_title", "pr_body",
+    "failure_reason"
+  ],
+  "properties": {
+    "status": { "enum": ["success", "needs_info", "blocked", "failed"] },
+    "summary": { "type": "string", "maxLength": 4000 },
+    "issue_number": { "type": "integer", "minimum": 1 },
+    "base_branch": { "type": "string", "pattern": "^(?!refs/)(?!.*\\.\\.)[A-Za-z0-9._/-]+$" },
+    "working_branch": { "type": "string", "pattern": "^codex/issue-[1-9][0-9]*-[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "changed_files": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+    },
+    "acceptance_criteria": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["criterion", "status", "evidence"],
+        "properties": {
+          "criterion": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "status": { "enum": ["passed", "failed", "not_verified"] },
+          "evidence": { "type": "string", "maxLength": 4000 }
+        }
+      }
+    },
+    "commands_run": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["command", "exit_code", "summary"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1, "maxLength": 1000 },
+          "exit_code": { "type": "integer", "minimum": 0, "maximum": 255 },
+          "summary": { "type": "string", "maxLength": 4000 }
+        }
+      }
+    },
+    "tests": { "type": "array", "items": { "type": "string", "maxLength": 2000 } },
+    "security_findings": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["severity", "summary", "location"],
+        "properties": {
+          "severity": { "enum": ["blocking", "warning", "suggestion"] },
+          "summary": { "type": "string", "minLength": 1, "maxLength": 4000 },
+          "location": { "type": "string", "maxLength": 1000 }
+        }
+      }
+    },
+    "risks": { "type": "array", "items": { "type": "string", "maxLength": 2000 } },
+    "manual_verification": { "type": "array", "items": { "type": "string", "maxLength": 2000 } },
+    "pr_title": { "type": "string", "maxLength": 256 },
+    "pr_body": { "type": "string", "maxLength": 60000 },
+    "failure_reason": { "type": "string", "maxLength": 4000 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "success" } } },
+      "then": {
+        "properties": {
+          "failure_reason": { "type": "string", "maxLength": 0 },
+          "pr_title": { "type": "string", "minLength": 1 },
+          "pr_body": { "type": "string", "minLength": 1, "pattern": "Closes #[1-9][0-9]*" },
+          "security_findings": {
+            "type": "array",
+            "not": { "contains": { "type": "object", "properties": { "severity": { "const": "blocking" } }, "required": ["severity"] } }
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "not": { "contains": { "type": "object", "properties": { "status": { "const": "failed" } }, "required": ["status"] } }
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["needs_info", "blocked", "failed"] } } },
+      "then": { "properties": { "failure_reason": { "type": "string", "minLength": 1 } } }
+    }
+  ]
+}

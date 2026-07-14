@@ -3,7 +3,7 @@ paths:
   - "apps/web/**"
 ---
 
-# Accessibility (WCAG 2.2)
+# Khả năng tiếp cận (WCAG 2.2)
 
 Nguồn gốc: `codex-web-quality-skills/skills/accessibility/SKILL.md` và `references/WCAG.md`, `references/A11Y-PATTERNS.md`. Mục tiêu tối thiểu: **WCAG 2.2 AA** cho toàn bộ giao diện storefront (`apps/web/src/app/(site)/**`) và admin panel.
 
@@ -14,7 +14,7 @@ Nguồn gốc: `codex-web-quality-skills/skills/accessibility/SKILL.md` và `ref
 - **Understandable** (hiểu được): `lang`, heading hierarchy, label rõ ràng, thông báo lỗi dễ hiểu.
 - **Robust** (bền vững): HTML hợp lệ, ARIA dùng đúng, hoạt động tốt với assistive technology.
 
-## Critical — phải sửa ngay khi phát hiện
+## Nghiêm trọng — phải sửa ngay khi phát hiện
 
 - [ ] Mọi `<input>`/`<select>`/`<textarea>` có label liên kết qua `for`/`id` (hoặc `aria-label` khi không thể dùng label hiển thị).
 - [ ] Mọi `<img>` có `alt` phù hợp; ảnh trang trí dùng `alt=""`.

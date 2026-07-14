@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Formatting
+        run: npm run format:check -w apps/web
+      - name: API lint
+        run: npm run lint -w apps/api
+      - name: Type check API
+        run: npx tsc --noEmit -p apps/api/tsconfig.json
+      - name: Type check web
+        run: npx tsc --noEmit -p apps/web/tsconfig.json
+      - name: Unit and integration test availability
+        run: |
+          if node -e "const p=['apps/api/package.json','apps/web/package.json'].map(require); process.exit(p.some(x=>x.scripts?.test)?0:1)"; then
+            npm run test --workspaces --if-present
+          else
+            echo 'UNAVAILABLE: no unit/integration test script is configured; no tests are claimed.'
+          fi
+      - name: Prisma generated-code consistency
+        run: |
+          npm run prisma:generate
+          git diff --exit-code -- apps/api/prisma package-lock.json
+      - name: Build
+        run: npm run build
+
+  migration-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - name: Validate migration SQL files
+        run: |
+          test -f apps/api/prisma/schema.prisma
+          for file in database/init/*.sql database/migrations/*.sql; do
+            test -s "$file"
+            ! grep -Eiq 'DROP[[:space:]]+(DATABASE|SCHEMA)' "$file"
+          done
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Scan tracked text for high-confidence credential patterns
+        run: |
+          if git grep -IEn '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|github_pat_[A-Za-z0-9_]+|AKIA[0-9A-Z]{16})' -- ':!scripts/dump-core.sql'; then
+            echo 'Potential credential detected.' >&2
+            exit 1
+          fi
+          test ! -n "$(git ls-files '.env' '.env.*' '*.pem' '*.key')"
+
+  dependency-review:
+    if: >-
+      github.event_name == 'pull_request' &&
+      (github.event.repository.private == false || vars.CODEX_ENABLE_DEPENDENCY_REVIEW == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

@@ -3,7 +3,7 @@ name: accessibility-review
 description: Review accessibility theo WCAG 2.2 AA — keyboard, focus, label, contrast, ARIA, modal, form error, live region. Dùng khi người dùng nói "kiểm tra accessibility", "a11y review", "WCAG", "screen reader", "keyboard navigation".
 ---
 
-# Accessibility Review
+# Rà soát khả năng tiếp cận
 
 Dựa trên `.claude/rules/web-quality/accessibility.md`. Mục tiêu tối thiểu: WCAG 2.2 AA.
 
@@ -21,12 +21,12 @@ Dựa trên `.claude/rules/web-quality/accessibility.md`. Mục tiêu tối thi�
 3. Phân loại theo mức Critical/Serious/Moderate/Low (tương ứng Critical/High/Medium/Low của audit tổng).
 4. Không tự sửa nếu chỉ được yêu cầu review.
 
-## Output
+## Đầu ra
 
 ```md
-## Accessibility Review (WCAG 2.2 AA)
+## Rà soát khả năng tiếp cận (WCAG 2.2 AA)
 
-### Critical
+### Nghiêm trọng
 | Vấn đề | WCAG criterion | Evidence (file:line) | Fix |
 |---|---|---|---|
 
@@ -36,6 +36,6 @@ Dựa trên `.claude/rules/web-quality/accessibility.md`. Mục tiêu tối thi�
 ### Moderate
 ...
 
-### Low
+### Thấp
 ...
 ```

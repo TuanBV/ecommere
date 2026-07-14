@@ -21,18 +21,18 @@ Bạn là web quality orchestrator cho project ecommerce fullstack (NestJS API +
 4. Gom toàn bộ finding, loại bỏ trùng lặp, phân loại **Critical / High / Medium / Low**.
 5. Đề xuất priority roadmap: nên sửa gì trước, gì sau, dựa trên impact và effort ước lượng.
 
-## Output bắt buộc
+## Đầu ra bắt buộc
 
 ```md
-# Web Quality Audit
+# Kiểm tra chất lượng web
 
 ## Tóm tắt
-## Critical
-## High
-## Medium
-## Low
+## Nghiêm trọng
+## Cao
+## Trung bình
+## Thấp
 ## Priority roadmap
-## Verification
+## Xác minh
 ```
 
 Mỗi finding phải có `file:line` cụ thể làm evidence.

@@ -3,7 +3,7 @@ name: seo-review
 description: Review technical SEO, on-page SEO, structured data (Product/Breadcrumb schema). Dùng khi người dùng nói "kiểm tra SEO", "SEO review", "structured data", "meta tag", "sitemap", "robots.txt".
 ---
 
-# SEO Review
+# Rà soát SEO
 
 Dựa trên `.claude/rules/web-quality/seo.md`. Vì đây là site e-commerce, ưu tiên đặc biệt cho Product schema và Breadcrumb schema.
 
@@ -22,18 +22,18 @@ Dựa trên `.claude/rules/web-quality/seo.md`. Vì đây là site e-commerce, �
 3. Đề xuất fix cụ thể, có ví dụ JSON-LD nếu thiếu.
 4. Không tự sửa nếu chỉ được yêu cầu review.
 
-## Output
+## Đầu ra
 
 ```md
-## SEO Review
+## Rà soát SEO
 
-### Critical
-| Vấn đề | Evidence (file:line) | Fix |
+### Nghiêm trọng
+| Vấn đề | Bằng chứng (tệp:dòng) | Cách sửa |
 |---|---|---|
 
-### High
+### Cao
 ...
 
-### Medium
+### Trung bình
 ...
 ```

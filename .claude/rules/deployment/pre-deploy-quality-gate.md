@@ -6,7 +6,7 @@ paths:
   - "scripts/**"
 ---
 
-# Pre-deploy Quality Gate
+# Cổng chất lượng trước khi deploy
 
 Trước khi coi một thay đổi là "sẵn sàng deploy", chạy/liệt kê các bước sau (script nào không tồn tại thì ghi rõ "không có script này" thay vì bỏ qua im lặng):
 

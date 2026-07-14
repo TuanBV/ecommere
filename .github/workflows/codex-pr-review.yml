@@ -1,0 +1,93 @@
+name: Codex PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: codex-pr-review-${{ github.repository }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch untrusted PR head without checking out its control-plane files
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          git fetch --no-tags origin "+refs/pull/$PR_NUMBER/head:refs/remotes/pull/$PR_NUMBER/head"
+          mkdir -p .codex-runtime
+          python3 - <<'PY'
+          import json,os
+          x={k.lower():os.environ.get(k,'') for k in ['HEAD_SHA','BASE_SHA','PR_NUMBER','PR_TITLE','PR_BODY','PR_AUTHOR']}
+          with open('.codex-runtime/pr-context.json','w',encoding='utf-8') as f: json.dump(x,f,indent=2); f.write('\n')
+          PY
+      - uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/pull-request-review.md
+          output-file: .codex-runtime/pr-review.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          allow-bots: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codex-pr-review-${{ github.event.pull_request.number }}
+          path: .codex-runtime/pr-review.md
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-review:
+    needs: review
+    if: needs.review.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: codex-pr-review-${{ github.event.pull_request.number }}
+          path: .codex-runtime
+      - uses: actions/github-script@v8
+        env:
+          REVIEW_FILE: .codex-runtime/pr-review.md
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- codex-pr-review -->';
+            const review = fs.readFileSync(process.env.REVIEW_FILE, 'utf8').trim();
+            if (!review) return;
+            const body = `${marker}\n## Codex review\n\n${review}`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number, per_page: 100
+            });
+            const previous = comments.find(c => c.user?.type === 'Bot' && c.body?.includes(marker));
+            if (previous) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: previous.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number, body
+              });
+            }

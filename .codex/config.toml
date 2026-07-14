@@ -1,0 +1,36 @@
+sandbox_mode = "workspace-write"
+approval_policy = "never"
+
+[features]
+multi_agent = true
+
+[agents]
+max_threads = 4
+
+[agents.repository-explorer]
+description = "Read-only repository architecture and dependency explorer."
+config_file = "agents/repository-explorer.toml"
+
+[agents.issue-triager]
+description = "Read-only untrusted GitHub Issue triage specialist."
+config_file = "agents/issue-triager.toml"
+
+[agents.issue-planner]
+description = "Read-only implementation and test planner."
+config_file = "agents/issue-planner.toml"
+
+[agents.issue-implementer]
+description = "Single workspace-write implementer constrained to the accepted plan."
+config_file = "agents/issue-implementer.toml"
+
+[agents.test-reviewer]
+description = "Read-only test coverage and regression reviewer."
+config_file = "agents/test-reviewer.toml"
+
+[agents.security-reviewer]
+description = "Read-only application security reviewer."
+config_file = "agents/security-reviewer.toml"
+
+[agents.final-reviewer]
+description = "Read-only scope and Definition of Done reviewer."
+config_file = "agents/final-reviewer.toml"

@@ -23,6 +23,6 @@ Bạn là chuyên gia security & best practices, review `apps/api` và `apps/web
 - Dependency có lỗ hổng đã biết (`npm audit`, nếu được phép chạy).
 - Source map production, deprecated API, third-party script thiếu SRI.
 
-## Output
+## Đầu ra
 
 Danh sách finding có `file:line`, mức độ rủi ro (Critical/High/Medium/Low), và fix đề xuất. Không tự sửa code trừ khi được yêu cầu rõ ràng ngoài vai trò review.

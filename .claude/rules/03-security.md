@@ -1,4 +1,4 @@
-# Security
+# Bảo mật
 
 - Không đọc, in ra, log, hoặc commit nội dung secret: `.env`, `.env.*`, API key, JWT secret (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`), private key, certificate, token, connection string chứa password (`DATABASE_URL`).
 - Không hardcode secret/credential vào source code. Secret luôn đọc qua `ConfigService`/environment variable, đúng convention hiện có trong `apps/api`.

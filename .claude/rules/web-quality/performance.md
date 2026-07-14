@@ -3,11 +3,11 @@ paths:
   - "apps/web/**"
 ---
 
-# Performance
+# Hiệu năng
 
 Nguồn gốc: `codex-web-quality-skills/skills/performance/SKILL.md`. Áp dụng cho frontend Next.js (`apps/web`).
 
-## Performance budget
+## Hiệu năng budget
 
 | Resource | Budget |
 |---|---|

@@ -14,7 +14,7 @@ Nguồn gốc: `codex-web-quality-skills/skills/seo/SKILL.md`. Áp dụng cho st
 - [ ] Không `noindex` nhầm trang quan trọng (trang chủ, danh mục, sản phẩm, tin tức).
 - [ ] Có canonical URL cho mỗi trang, đặc biệt trang có query filter (`?danh-muc=...`, `?thuong-hieu=...`) — canonical nên trỏ về URL không filter hoặc URL chuẩn hoá.
 
-## On-page SEO
+## SEO trên trang
 
 - [ ] Mỗi trang quan trọng có `<title>` unique, mô tả rõ nội dung, khoảng 50–60 ký tự.
 - [ ] Có `meta description` unique, khoảng 150–160 ký tự.
@@ -31,7 +31,7 @@ Với e-commerce, ưu tiên:
 - **Organization** schema ở layout gốc nếu chưa có, gồm `name`, `url`, `logo`, `contactPoint`.
 - Validate structured data bằng [Google Rich Results Test](https://search.google.com/test/rich-results) trước khi coi là hoàn tất — không chỉ dựa vào việc JSON-LD render ra HTML.
 
-## Mobile SEO
+## SEO trên thiết bị di động
 
 - [ ] `<meta name="viewport" content="width=device-width, initial-scale=1">` có trong `layout.tsx`.
 - [ ] Tap target ≥ 48px — khớp với quy tắc chiều cao control tối thiểu đã có trong `apps/web/AGENTS.md`.

@@ -5,7 +5,7 @@ paths:
   - "apps/web/src/app/(admin)/**"
 ---
 
-# Forms & Accessibility
+# Biểu mẫu và khả năng tiếp cận
 
 Áp dụng cho các form quan trọng: checkout, contact, và toàn bộ form trong admin panel (product, order, user, settings...).
 
