@@ -48,6 +48,17 @@ services:
         mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/03-facebook-posts.sql;
         mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core -e \"SELECT COUNT(*) AS products FROM product WHERE COALESCE(del_flag,0)=0;\";
       "
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "no"]
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   api:
     build:
       context: .
@@ -61,6 +72,7 @@ services:
       JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-7d}
       MEDIA_BASE_URL: ${MEDIA_BASE_URL:-http://localhost:3001}
       UPLOAD_DIR: /app/uploads
+      REDIS_URL: redis://redis:6379
     ports:
       - "${API_PORT:-3010}:3001"
     depends_on:
@@ -68,6 +80,8 @@ services:
         condition: service_healthy
       db-init:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     volumes:
       - ./uploads:/app/uploads
   web:

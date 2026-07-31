@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { CATALOG_CACHE_PREFIX } from '../catalog/catalog.service';
+import { RedisService } from '../../redis/redis.service';
 import { AdminRepository } from './admin.repo';
 import {
   AdminBannerDto,
@@ -24,7 +26,14 @@ import {
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly adminRepository: AdminRepository) {}
+  constructor(
+    private readonly adminRepository: AdminRepository,
+    private readonly redis: RedisService
+  ) {}
+
+  private invalidateCatalogCache() {
+    return this.redis.delByPrefix(CATALOG_CACHE_PREFIX);
+  }
 
   dashboard() {
     return this.adminRepository.dashboard();
@@ -32,32 +41,50 @@ export class AdminService {
   products(q?: string) {
     return this.adminRepository.products(q);
   }
-  createProduct(body: AdminProductDto) {
-    return this.adminRepository.createProduct(body);
+  async createProduct(body: AdminProductDto) {
+    const result = await this.adminRepository.createProduct(body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  updateProduct(id: string, body: UpdateAdminProductDto) {
-    return this.adminRepository.updateProduct(id, body);
+  async updateProduct(id: string, body: UpdateAdminProductDto) {
+    const result = await this.adminRepository.updateProduct(id, body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  softDeleteProduct(id: string) {
-    return this.adminRepository.softDeleteProduct(id);
+  async softDeleteProduct(id: string) {
+    const result = await this.adminRepository.softDeleteProduct(id);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  createCategory(body: AdminTaxonomyDto) {
-    return this.adminRepository.createCategory(body);
+  async createCategory(body: AdminTaxonomyDto) {
+    const result = await this.adminRepository.createCategory(body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  updateCategory(id: string, body: UpdateAdminTaxonomyDto) {
-    return this.adminRepository.updateCategory(id, body);
+  async updateCategory(id: string, body: UpdateAdminTaxonomyDto) {
+    const result = await this.adminRepository.updateCategory(id, body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  softDeleteCategory(id: string) {
-    return this.adminRepository.softDeleteCategory(id);
+  async softDeleteCategory(id: string) {
+    const result = await this.adminRepository.softDeleteCategory(id);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  createBrand(body: AdminTaxonomyDto) {
-    return this.adminRepository.createBrand(body);
+  async createBrand(body: AdminTaxonomyDto) {
+    const result = await this.adminRepository.createBrand(body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  updateBrand(id: string, body: UpdateAdminTaxonomyDto) {
-    return this.adminRepository.updateBrand(id, body);
+  async updateBrand(id: string, body: UpdateAdminTaxonomyDto) {
+    const result = await this.adminRepository.updateBrand(id, body);
+    await this.invalidateCatalogCache();
+    return result;
   }
-  softDeleteBrand(id: string) {
-    return this.adminRepository.softDeleteBrand(id);
+  async softDeleteBrand(id: string) {
+    const result = await this.adminRepository.softDeleteBrand(id);
+    await this.invalidateCatalogCache();
+    return result;
   }
   orders() {
     return this.adminRepository.orders();
