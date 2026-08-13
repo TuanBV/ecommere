@@ -12,7 +12,8 @@ branches. All statements must be supported by recorded evidence.
 
 ## Procedure
 
-1. Produce an imperative title and sections: Issue, Summary, Implementation, Changed files,
+1. Produce a Conventional Commit title with an English imperative subject of at most 50 characters
+   and sections: Issue, Summary, Implementation, Changed files,
    acceptance checklist, Tests and commands, Security review, Risks, Rollback, Manual verification,
    and Agent limitations.
 2. End with exactly `Closes #<issue-number>` so closure occurs only after merge.

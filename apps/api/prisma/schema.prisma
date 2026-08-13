@@ -139,21 +139,24 @@ model News {
 }
 
 model Order {
-  id              String        @id @db.VarChar(36)
-  version         Int?          @default(0)
-  customerName    String        @map("customer_name") @db.VarChar(100)
-  customerPhone   String        @map("customer_phone") @db.VarChar(15)
-  customerEmail   String?       @map("customer_email") @db.VarChar(100)
-  shippingAddress String        @map("shipping_address") @db.Text
-  note            String?       @db.Text
-  adminNote       String?       @map("admin_note") @db.Text
-  totalAmount     Decimal       @default(0.00) @map("total_amount") @db.Decimal(15, 2)
-  paymentMethod   String?       @default("COD") @map("payment_method") @db.VarChar(50)
-  status          OrderStatus?  @default(PENDING)
-  delFlag         Int?          @default(0) @map("del_flag")
-  createdDate     DateTime?     @map("created_date") @db.Timestamp(6)
-  updatedDate     DateTime?     @map("updated_date") @db.Timestamp(6)
-  details         OrderDetail[]
+  id                       String        @id @db.VarChar(36)
+  version                  Int?          @default(0)
+  customerName             String        @map("customer_name") @db.VarChar(100)
+  customerPhone            String        @map("customer_phone") @db.VarChar(15)
+  customerEmail            String?       @map("customer_email") @db.VarChar(100)
+  shippingAddress          String        @map("shipping_address") @db.Text
+  note                     String?       @db.Text
+  adminNote                String?       @map("admin_note") @db.Text
+  totalAmount              Decimal       @default(0.00) @map("total_amount") @db.Decimal(15, 2)
+  paymentMethod            String?       @default("COD") @map("payment_method") @db.VarChar(50)
+  installmentTerm          Int?          @map("installment_term")
+  installmentDownPayment   Decimal?      @map("installment_down_payment") @db.Decimal(15, 2)
+  installmentMonthlyAmount Decimal?      @map("installment_monthly_amount") @db.Decimal(15, 2)
+  status                   OrderStatus?  @default(PENDING)
+  delFlag                  Int?          @default(0) @map("del_flag")
+  createdDate              DateTime?     @map("created_date") @db.Timestamp(6)
+  updatedDate              DateTime?     @map("updated_date") @db.Timestamp(6)
+  details                  OrderDetail[]
 
   @@map("orders")
 }

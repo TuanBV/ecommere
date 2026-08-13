@@ -6,10 +6,14 @@ context="${2:-.codex-runtime/issue-context.json}"
 result="${3:-.codex-runtime/issue-result.json}"
 [[ "${INPUT_DRY_RUN:-false}" == "true" ]] && { echo "dry-run: would create or update Draft PR"; exit 0; }
 readarray -t data < <(python3 - "$context" "$result" "$issue" <<'PY'
-import json,sys
+import json,re,sys
 c=json.load(open(sys.argv[1],encoding="utf-8")); r=json.load(open(sys.argv[2],encoding="utf-8"))
 if r["status"]!="success" or c["issue_number"]!=int(sys.argv[3]): raise SystemExit("invalid PR inputs")
 if f"Closes #{c['issue_number']}" not in r["pr_body"]: raise SystemExit("PR body lacks closing keyword")
+title=r["pr_title"]
+match=re.fullmatch(r"(feat|fix|docs|refactor|test|chore|revert)(\([a-z0-9-]+\))?: ([\x20-\x7e]+)",title)
+if not match or len(match.group(3)) > 50 or match.group(3).endswith("."):
+    raise SystemExit("PR title violates Conventional Commits policy")
 print(c["base_branch"]); print(c["working_branch"]); print(r["pr_title"])
 PY
 )

@@ -181,7 +181,7 @@ export function OrdersView({
             <div className="font-black text-red-600">{money(item.totalAmount)}</div>
             <div>
               <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-bold text-slate-600">
-                {item.paymentMethod ?? 'COD'}
+                {paymentMethodLabel(item.paymentMethod)}
               </span>
             </div>
             <div>
@@ -232,6 +232,19 @@ export function OrdersView({
                   <div>{selected.shippingAddress}</div>
                 </InfoBox>
               </div>
+
+              {selected.paymentMethod === 'installment' ? (
+                <InfoBox title="Thông tin trả góp">
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <div>Kỳ hạn: {selected.installmentTerm} tháng</div>
+                    <div>Trả trước: {money(selected.installmentDownPayment ?? 0)}</div>
+                    <div>Mỗi tháng: {money(selected.installmentMonthlyAmount ?? 0)}</div>
+                  </div>
+                  <div className="mt-2 text-slate-600">
+                    Yêu cầu 0% lãi/phí, chờ nhân viên liên hệ xác nhận.
+                  </div>
+                </InfoBox>
+              ) : null}
 
               <section className="overflow-hidden rounded-xl border border-slate-200">
                 <div className="border-b border-slate-200 px-4 py-3 text-xs font-black uppercase text-slate-600">
@@ -362,4 +375,10 @@ function formatDateTime(value?: string | null) {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date);
+}
+
+function paymentMethodLabel(value?: string | null) {
+  if (value === 'installment') return 'Trả góp';
+  if (value === 'BANK_TRANSFER') return 'Chuyển khoản';
+  return 'COD';
 }

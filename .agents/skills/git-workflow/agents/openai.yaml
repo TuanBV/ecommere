@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Workflow"
+  short_description: "Apply the repository Git Flow and PR policy"
+  default_prompt: "Use $git-workflow to choose the correct branch, commit, PR, merge, or conflict process."

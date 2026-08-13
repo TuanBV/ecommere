@@ -13,7 +13,7 @@ import {
   Wrench
 } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { ResponsiveImage } from '@/components/responsive-image';
@@ -26,7 +26,7 @@ const schema = z.object({
   customerEmail: z.string().email('Email không hợp lệ').optional().or(z.literal('')),
   shippingAddress: z.string().min(5, 'Vui lòng nhập địa chỉ nhận hàng'),
   note: z.string().optional(),
-  paymentMethod: z.enum(['COD', 'BANK_TRANSFER']).default('COD')
+  paymentMethod: z.enum(['COD', 'BANK_TRANSFER', 'installment']).default('COD')
 });
 
 type CheckoutValues = z.infer<typeof schema>;
@@ -34,6 +34,10 @@ type CheckoutValues = z.infer<typeof schema>;
 export function CheckoutForm() {
   const { items, remove, setQuantity, clear } = useCart();
   const [submitting, setSubmitting] = useState(false);
+  const [installment, setInstallment] = useState<{
+    term: number;
+    downPayment: number;
+  } | null>(null);
 
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(schema),
@@ -46,12 +50,30 @@ export function CheckoutForm() {
 
   const paymentMethod = form.watch('paymentMethod');
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const term = Number(params.get('term'));
+    const downPayment = Number(params.get('downPayment'));
+    if (
+      params.get('payment') === 'installment' &&
+      [3, 6, 9, 12].includes(term) &&
+      Number.isInteger(downPayment) &&
+      downPayment >= 0
+    ) {
+      setInstallment({ term, downPayment });
+      form.setValue('paymentMethod', 'installment');
+    }
+  }, [form]);
+
   const total = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items]
   );
 
   const qrUrl = `https://img.vietqr.io/image/MB-097678888-compact2.png?amount=${total}`;
+  const installmentMonthlyAmount = installment
+    ? Math.max(0, total - installment.downPayment) / installment.term
+    : 0;
 
   async function submit(values: CheckoutValues) {
     if (!items.length) return;
@@ -64,6 +86,12 @@ export function CheckoutForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...values,
+          ...(values.paymentMethod === 'installment' && installment
+            ? {
+                installmentTerm: installment.term,
+                installmentDownPayment: installment.downPayment
+              }
+            : {}),
           transferContent:
             values.paymentMethod === 'BANK_TRANSFER'
               ? `${values.customerPhone} ${values.customerName}`
@@ -165,25 +193,53 @@ export function CheckoutForm() {
                     Phương thức thanh toán
                   </h2>
 
-                  <div className="mb-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <PaymentCard
-                      checked={paymentMethod === 'COD'}
-                      title="Thanh toán khi nhận hàng"
-                      desc="Trả tiền mặt khi shipper giao hàng."
-                      icon={<Package size={22} />}
-                      color="orange"
-                      onClick={() => form.setValue('paymentMethod', 'COD')}
-                    />
+                  {installment ? (
+                    <div className="mb-3 rounded-xl border-2 border-blue-600 bg-blue-50 p-5">
+                      <h3 className="text-lg font-semibold text-blue-800">Yêu cầu trả góp</h3>
+                      <div className="mt-3 space-y-2 text-base text-gray-700">
+                        <div className="flex justify-between gap-4">
+                          <span>Kỳ hạn</span>
+                          <strong>{installment.term} tháng</strong>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span>Trả trước</span>
+                          <strong>{money(installment.downPayment)}</strong>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span>Dự kiến mỗi tháng</span>
+                          <strong>{money(Math.ceil(installmentMonthlyAmount))}</strong>
+                        </div>
+                        <div className="flex justify-between gap-4">
+                          <span>Tổng dự kiến</span>
+                          <strong>{money(total)}</strong>
+                        </div>
+                        <p className="border-t border-blue-100 pt-2 text-sm font-medium text-gray-600">
+                          Số tiền chỉ là ước tính, chưa phải phê duyệt tài chính. Nhân viên sẽ liên
+                          hệ xác nhận.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <PaymentCard
+                        checked={paymentMethod === 'COD'}
+                        title="Thanh toán khi nhận hàng"
+                        desc="Trả tiền mặt khi shipper giao hàng."
+                        icon={<Package size={22} />}
+                        color="orange"
+                        onClick={() => form.setValue('paymentMethod', 'COD')}
+                      />
 
-                    <PaymentCard
-                      checked={paymentMethod === 'BANK_TRANSFER'}
-                      title="Chuyển khoản ngân hàng"
-                      desc="Quét mã QR hoặc chuyển khoản App."
-                      icon={<CreditCard size={22} />}
-                      color="blue"
-                      onClick={() => form.setValue('paymentMethod', 'BANK_TRANSFER')}
-                    />
-                  </div>
+                      <PaymentCard
+                        checked={paymentMethod === 'BANK_TRANSFER'}
+                        title="Chuyển khoản ngân hàng"
+                        desc="Quét mã QR hoặc chuyển khoản App."
+                        icon={<CreditCard size={22} />}
+                        color="blue"
+                        onClick={() => form.setValue('paymentMethod', 'BANK_TRANSFER')}
+                      />
+                    </div>
+                  )}
 
                   {paymentMethod === 'BANK_TRANSFER' && (
                     <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-5">

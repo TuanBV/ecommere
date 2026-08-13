@@ -1,27 +1,27 @@
-# Codex Instructions — NestJS Prisma API
+# Chỉ dẫn Codex — API NestJS Prisma
 
-These instructions apply to this API repository. Follow them whenever Codex adds or changes backend code.
+Các chỉ dẫn này áp dụng cho API. Tuân theo chúng mỗi khi Codex thêm hoặc thay đổi code backend.
 
-## Project stack
+## Stack dự án
 
-- Framework: NestJS with Express adapter.
-- Database access: Prisma through `src/prisma/prisma.service.ts` only.
-- Validation: DTO classes in `src/modules/<module>/dto/` using `class-validator` and `class-transformer`.
-- Response shape: controllers return `ok(data, meta?)` from `src/common/api-response.ts`.
-- Module root: `src/modules/<module>/`.
+- Framework: NestJS với adapter Express.
+- Truy cập database: chỉ dùng Prisma qua `src/prisma/prisma.service.ts`.
+- Validation: class DTO trong `src/modules/<module>/dto/` dùng `class-validator` và `class-transformer`.
+- Dạng response: controller trả về `ok(data, meta?)` từ `src/common/api-response.ts`.
+- Gốc module: `src/modules/<module>/`.
 
-## Required module flow
+## Luồng module bắt buộc
 
-Use this direction only:
+Chỉ dùng hướng sau:
 
 ```txt
 controller -> service -> repository -> Prisma
 repository -> projector -> public response shape, when mapping is needed
 ```
 
-Controllers and services must never inject or call `PrismaService` directly.
+Controller và service không bao giờ được inject hoặc gọi trực tiếp `PrismaService`.
 
-## Folder convention
+## Quy ước thư mục
 
 ```txt
 src/modules/<module>/
@@ -34,57 +34,58 @@ src/modules/<module>/
     *.dto.ts
 ```
 
-## Prisma rules
+## Quy tắc Prisma
 
-- Edit `prisma/schema.prisma` for model changes.
-- Keep the current datasource provider unless the full project is migrated.
-- Use `@map`, `@@map`, `@relation`, and `@@index` consistently with existing tables.
-- After schema changes, run `npm run prisma:generate` and create/apply the migration using the project workflow.
+- Sửa `prisma/schema.prisma` khi thay đổi model.
+- Giữ datasource provider hiện tại trừ khi toàn bộ dự án được migrate.
+- Dùng `@map`, `@@map`, `@relation` và `@@index` nhất quán với các bảng hiện có.
+- Sau khi thay đổi schema, chạy `npm run prisma:generate` và tạo/áp dụng migration bằng workflow dự án.
 
-## DTO and validation rules
+## Quy tắc DTO và validation
 
-- Every request body/query that accepts structured data must have a DTO class.
-- Do not use `Record<string, unknown>` in controllers or services for API bodies.
-- Use `@IsString`, `@IsOptional`, `@IsInt`, `@Min`, `@Max`, `@IsEmail`, `@IsBoolean`, `@IsEnum`, `@Type(() => Number)`, and similar decorators.
-- Defaults belong in DTO classes for optional pagination/sort/status fields.
-- Keep DTOs aligned with frontend forms.
+- Mọi request body/query nhận dữ liệu có cấu trúc phải có một class DTO.
+- Không dùng `Record<string, unknown>` trong controller hoặc service cho API body.
+- Dùng `@IsString`, `@IsOptional`, `@IsInt`, `@Min`, `@Max`, `@IsEmail`, `@IsBoolean`, `@IsEnum`,
+  `@Type(() => Number)` và các decorator tương tự.
+- Giá trị mặc định cho trường phân trang/sắp xếp/trạng thái tùy chọn phải nằm trong class DTO.
+- Giữ DTO đồng bộ với form frontend.
 
-## Repository rules
+## Quy tắc repository
 
-- Repositories are the only layer allowed to access Prisma.
-- Constructor should inject `PrismaService`.
-- Use `select`/`include` intentionally and never expose sensitive fields such as user passwords.
-- Repositories may throw Nest HTTP exceptions for DB-backed business failures.
-- Do not catch/rethrow Prisma errors just to log them.
+- Repository là layer duy nhất được phép truy cập Prisma.
+- Constructor nên inject `PrismaService`.
+- Dùng `select`/`include` có chủ đích và không bao giờ lộ trường nhạy cảm như mật khẩu người dùng.
+- Repository có thể throw Nest HTTP exception cho lỗi nghiệp vụ dựa trên database.
+- Không catch rồi throw lại lỗi Prisma chỉ để log.
 
-## Service rules
+## Quy tắc service
 
-- Services receive validated DTOs from controllers.
-- Services orchestrate business rules and call repositories.
-- Services should not wrap data with `ok()`; controllers do that.
-- Services should not import Prisma types unless only needed for public non-DB enum typing.
+- Service nhận DTO đã validate từ controller.
+- Service điều phối quy tắc nghiệp vụ và gọi repository.
+- Service không bọc dữ liệu bằng `ok()`; controller thực hiện việc đó.
+- Service không import kiểu Prisma trừ khi chỉ cần cho kiểu enum public không liên quan database.
 
-## Controller rules
+## Quy tắc controller
 
-- Controllers only receive DTOs/params, call service, and return `ok(...)`.
-- Protected admin routes must use `JwtAuthGuard` and `AdminRoleGuard`.
-- Do not place business rules or Prisma queries in controllers.
+- Controller chỉ nhận DTO/param, gọi service và trả về `ok(...)`.
+- Route admin được bảo vệ phải dùng `JwtAuthGuard` và `AdminRoleGuard`.
+- Không đặt quy tắc nghiệp vụ hoặc truy vấn Prisma trong controller.
 
-## Projector rules
+## Quy tắc projector
 
-Use `<module>.projector.ts` when returning complex Prisma rows.
+Dùng `<module>.projector.ts` khi trả về row Prisma phức tạp.
 
-- Projectors must be pure mapping functions.
-- Convert Decimal to number/string consistently.
-- Convert BigInt to string.
-- Strip sensitive fields.
-- No DB calls and no business logic in projectors.
+- Projector phải là hàm ánh xạ thuần túy.
+- Chuyển Decimal thành number/string nhất quán.
+- Chuyển BigInt thành string.
+- Loại bỏ trường nhạy cảm.
+- Không gọi database và không chứa logic nghiệp vụ trong projector.
 
-## Frontend readiness checklist
+## Checklist sẵn sàng cho frontend
 
-After changing an endpoint, check the frontend/admin screens that consume it:
+Sau khi thay đổi endpoint, kiểm tra các màn hình frontend/admin sử dụng endpoint đó:
 
-- List endpoints return all table/card fields and pagination/filter metadata when needed.
-- Detail endpoints return nested fields displayed by the UI.
-- Create/edit DTOs include every form field.
-- Admin endpoints never return passwords.
+- Endpoint danh sách trả về mọi trường cho bảng/card và metadata phân trang/lọc khi cần.
+- Endpoint chi tiết trả về các trường lồng nhau được UI hiển thị.
+- DTO tạo/sửa gồm mọi trường trong form.
+- Endpoint admin không bao giờ trả về mật khẩu.

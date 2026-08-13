@@ -1,17 +1,32 @@
 import { Injectable } from '@nestjs/common';
+import { RedisService } from '../../redis/redis.service';
 import { CatalogRepository } from './catalog.repo';
 import { ProductQueryDto } from './dto/product-query.dto';
 
+export const CATALOG_CACHE_PREFIX = 'catalog:';
+const LIST_TTL_SECONDS = 60;
+const DETAIL_TTL_SECONDS = 120;
+const TAXONOMY_TTL_SECONDS = 300;
+
 @Injectable()
 export class CatalogService {
-  constructor(private readonly catalogRepository: CatalogRepository) {}
+  constructor(
+    private readonly catalogRepository: CatalogRepository,
+    private readonly redis: RedisService
+  ) {}
 
   findProducts(query: ProductQueryDto) {
-    return this.catalogRepository.findProducts(query);
+    const key = `${CATALOG_CACHE_PREFIX}products:${JSON.stringify(query)}`;
+    return this.redis.getOrSet(key, LIST_TTL_SECONDS, () =>
+      this.catalogRepository.findProducts(query)
+    );
   }
 
   findProductBySlug(slug: string) {
-    return this.catalogRepository.findProductBySlug(slug);
+    const key = `${CATALOG_CACHE_PREFIX}product:${slug}`;
+    return this.redis.getOrSet(key, DETAIL_TTL_SECONDS, () =>
+      this.catalogRepository.findProductBySlug(slug)
+    );
   }
 
   findProductImages(productId: string) {
@@ -19,10 +34,16 @@ export class CatalogService {
   }
 
   findCategories() {
-    return this.catalogRepository.findCategories();
+    const key = `${CATALOG_CACHE_PREFIX}categories`;
+    return this.redis.getOrSet(key, TAXONOMY_TTL_SECONDS, () =>
+      this.catalogRepository.findCategories()
+    );
   }
 
   findBrands() {
-    return this.catalogRepository.findBrands();
+    const key = `${CATALOG_CACHE_PREFIX}brands`;
+    return this.redis.getOrSet(key, TAXONOMY_TTL_SECONDS, () =>
+      this.catalogRepository.findBrands()
+    );
   }
 }
