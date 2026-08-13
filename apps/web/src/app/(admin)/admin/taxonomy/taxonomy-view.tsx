@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { Edit3, ImagePlus, Plus, Search, Trash2, X } from 'lucide-react';
 import { mediaUrl } from '@/lib/api';
 import { authRequest, authUpload, handleError } from '../common/api';
+import { AdminPagination } from '../common/ui';
 import type { OptionItem } from '../common/types';
 
 type Resource = 'categories' | 'brands';
@@ -43,12 +44,22 @@ export function TaxonomyView({
   const [modalOpen, setModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filteredItems = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) return items;
     return items.filter((item) => item.title.toLowerCase().includes(keyword));
   }, [items, query]);
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * pageSize, page * pageSize),
+    [filteredItems, page]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
 
   async function load() {
     try {
@@ -168,14 +179,7 @@ export function TaxonomyView({
             className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
           />
         </label>
-        <div className="flex gap-3">
-          <select className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm">
-            <option>{Math.min(5, filteredItems.length || 5)} bản ghi</option>
-          </select>
-          <select className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm">
-            <option>Mặc định (Mới nhất)</option>
-          </select>
-        </div>
+        <div className="text-sm font-bold text-slate-500">Tổng số {filteredItems.length} bản ghi</div>
       </div>
 
       <section className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -185,12 +189,12 @@ export function TaxonomyView({
           <div>{resource === 'brands' ? 'Tên thương hiệu' : 'Tên danh mục'}</div>
           <div className="text-right">Hành động</div>
         </div>
-        {filteredItems.map((item, index) => (
+        {pagedItems.map((item, index) => (
           <div
             key={item.id}
             className="grid grid-cols-[90px_1fr_1.3fr_120px] items-center border-t border-slate-100 px-6 py-5 text-sm"
           >
-            <div className="font-semibold text-slate-600">{index + 1}</div>
+            <div className="font-semibold text-slate-600">{(page - 1) * pageSize + index + 1}</div>
             <div>
               <div className="grid h-11 w-11 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                 {item.logo ? (
@@ -227,9 +231,12 @@ export function TaxonomyView({
             </div>
           </div>
         ))}
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 text-sm font-bold text-slate-600">
-          <span>Tổng số {filteredItems.length} bản ghi</span>
-        </div>
+        <AdminPagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredItems.length}
+          onPageChange={setPage}
+        />
       </section>
 
       {modalOpen ? (

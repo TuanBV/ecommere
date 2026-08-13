@@ -118,6 +118,17 @@ export function PoliciesView({
   }
 
   function openEdit(item: AdminPolicy) {
+    const assignedProducts: ProductLite[] = (item.products ?? []).map((product) => ({
+      id: product.id,
+      title: product.title,
+      sku: product.sku ?? '',
+      policyId: item.id
+    }));
+    setProducts((current) => {
+      const known = new Set(current.map((product) => product.id));
+      const missing = assignedProducts.filter((product) => !known.has(product.id));
+      return missing.length ? [...current, ...missing] : current;
+    });
     setForm({
       id: item.id,
       packageName: item.packageName,

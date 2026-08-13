@@ -36,6 +36,8 @@ services:
       - ./scripts/dump-core.sql:/seed/01-core.sql:ro
       - ./database/init/02-admin-dev.sql:/seed/02-admin-dev.sql:ro
       - ./database/migrations/20260702_facebook_posts.sql:/seed/03-facebook-posts.sql:ro
+      - ./database/migrations/20260610_safe_indexes_and_fks.sql:/seed/04-safe-indexes-and-fks.sql:ro
+      - ./database/migrations/20260714_installment_orders.sql:/seed/05-installment-orders.sql:ro
     command: >
       sh -c "
         until mariadb-admin ping -h db -uroot -p$${MARIADB_ROOT_PASSWORD} --silent; do sleep 1; done;
@@ -46,6 +48,8 @@ services:
           mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/02-admin-dev.sql;
         fi;
         mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/03-facebook-posts.sql;
+        mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/04-safe-indexes-and-fks.sql;
+        mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core < /seed/05-installment-orders.sql;
         mariadb -h db -uroot -p$${MARIADB_ROOT_PASSWORD} core -e \"SELECT COUNT(*) AS products FROM product WHERE COALESCE(del_flag,0)=0;\";
       "
   redis:
